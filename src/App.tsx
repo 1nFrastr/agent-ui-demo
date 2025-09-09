@@ -43,22 +43,25 @@ function App() {
     {
       id: '3',
       sender: 'assistant',
-      type: 'code',
+      type: 'text',
       content: {
-        text: '这是一个简单的React组件示例：',
-        code: {
-          content: `import React from 'react'
+        text: `## 代码示例
+这是一个React Hook的示例：
 
-export const MyComponent = () => {
-  return (
-    <div className="p-4">
-      <h1>Hello World!</h1>
-    </div>
-  )
-}`,
-          language: 'typescript'
-        }
-      },
+\`\`\`typescript
+import { useState, useEffect } from 'react'
+
+export const useCounter = (initialValue: number = 0) => {
+  const [count, setCount] = useState(initialValue)
+  
+  const increment = () => setCount(c => c + 1)
+  const decrement = () => setCount(c => c - 1)
+  const reset = () => setCount(initialValue)
+  
+  return { count, increment, decrement, reset }
+}
+\`\`\`
+`},
       timestamp: new Date(),
       status: 'delivered',
     }
@@ -75,6 +78,7 @@ export const MyComponent = () => {
     return (
       <div className="h-screen">
         <ChatInterface
+          className='max-w-4xl mx-auto'
           messages={messages}
           isLoading={isLoading}
           onSendMessage={sendMessage}

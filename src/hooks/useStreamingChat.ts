@@ -415,6 +415,7 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
   }, [])
 
   const simulateAIResponse = useCallback((_userMessage: string) => {
+    console.log('simulateAIResponse called with:', _userMessage)
     setIsLoading(true)
     
     // 随机选择一个AI回复
