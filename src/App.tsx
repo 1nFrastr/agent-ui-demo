@@ -1,11 +1,24 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
+import { ChatInterface } from '@/components/chat/chat-interface'
+import { useStreamingChat } from '@/hooks'
 import { Send, MessageCircle, Sparkles } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 function App() {
   const [count, setCount] = useState(0)
+  const [showChat, setShowChat] = useState(false)
+  
+  // 使用流式聊天Hook
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    stopStreaming,
+    clearChat,
+    deleteMessage,
+  } = useStreamingChat()
 
   // 示例消息数据
   const sampleMessages: Message[] = [
@@ -51,6 +64,29 @@ export const MyComponent = () => {
     }
   ]
 
+  const handleMessageAction = (messageId: string, action: 'edit' | 'delete' | 'copy' | 'retry') => {
+    console.log(`消息 ${messageId} 执行操作: ${action}`)
+    if (action === 'delete') {
+      deleteMessage(messageId)
+    }
+  }
+
+  if (showChat) {
+    return (
+      <div className="h-screen">
+        <ChatInterface
+          messages={messages}
+          isLoading={isLoading}
+          onSendMessage={sendMessage}
+          onMessageAction={handleMessageAction}
+          onStop={stopStreaming}
+          onClearChat={clearChat}
+          placeholder="发送消息开始对话..."
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-4xl mx-auto">
@@ -84,9 +120,9 @@ export const MyComponent = () => {
                 <Send className="mr-2 h-4 w-4" />
                 发送消息
               </Button>
-              <Button variant="ghost">
+              <Button variant="ghost" onClick={() => setShowChat(true)}>
                 <MessageCircle className="mr-2 h-4 w-4" />
-                新对话
+                开始对话
               </Button>
               <Button variant="destructive">
                 <Sparkles className="mr-2 h-4 w-4" />
@@ -106,14 +142,33 @@ export const MyComponent = () => {
           </div>
         </div>
 
+        {/* 流式对话演示入口 */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2">🚀 流式对话演示</h2>
+            <p className="text-muted-foreground">体验实时AI对话，支持Markdown渲染和代码高亮</p>
+          </div>
+          <div className="flex justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => setShowChat(true)}
+              className="px-8 py-4 text-lg"
+            >
+              <MessageCircle className="mr-3 h-6 w-6" />
+              开始流式对话
+            </Button>
+          </div>
+        </div>
+
         {/* 对话消息演示 */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-center mb-6">对话消息演示</h2>
+          <h2 className="text-2xl font-bold text-center mb-6">静态消息演示</h2>
           <div className="border border-border rounded-lg bg-card max-w-3xl mx-auto">
             {sampleMessages.map((message) => (
               <ChatMessage
                 key={message.id}
                 message={message}
+                enableMarkdown={true}
                 onAction={(messageId, action) => {
                   console.log(`消息 ${messageId} 执行操作: ${action}`)
                 }}
@@ -124,10 +179,10 @@ export const MyComponent = () => {
 
         <div className="text-center">
           <p className="text-muted-foreground">
-            🚀 Agent对话UI库开发中... 
+            🚀 Agent对话UI库 - 支持流式对话、Markdown渲染、代码高亮
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            使用 Git Bash 和 Linux 风格路径开发
+            使用 React + Vite + TailwindCSS + Radix UI 构建
           </p>
         </div>
       </div>

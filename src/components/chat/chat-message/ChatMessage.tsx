@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { cn } from '@/utils/cn'
 import { Copy, RotateCcw, Trash2, Edit3, User, Bot } from 'lucide-react'
 import type { Message, OnMessageAction } from '@/types/chat'
@@ -9,12 +10,14 @@ export interface ChatMessageProps {
   message: Message
   showAvatar?: boolean
   showTimestamp?: boolean
+  enableMarkdown?: boolean
+  theme?: 'light' | 'dark'
   onAction?: OnMessageAction
   className?: string
 }
 
 const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
-  ({ message, showAvatar = true, showTimestamp = true, onAction, className }, ref) => {
+  ({ message, showAvatar = true, showTimestamp = true, enableMarkdown = true, theme = 'light', onAction, className }, ref) => {
     const isUser = message.sender === 'user'
     const isSystem = message.sender === 'system'
 
@@ -78,10 +81,18 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
               message.status === 'failed' && 'border-destructive border'
             )}
           >
-            {message.type === 'text' && (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {message.content.text}
-              </p>
+            {message.type === 'text' && message.content.text && (
+              enableMarkdown ? (
+                <MarkdownRenderer 
+                  content={message.content.text} 
+                  theme={theme}
+                  className="text-sm"
+                />
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {message.content.text}
+                </p>
+              )
             )}
             
             {message.type === 'code' && message.content.code && (
