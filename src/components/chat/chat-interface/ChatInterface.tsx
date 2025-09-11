@@ -4,15 +4,13 @@ import { MessageInput } from '@/components/chat/message-input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { MessageCircle, MoreVertical, Trash2 } from 'lucide-react'
-import type { Message, OnMessageAction } from '@/types/chat'
+import type { Message } from '@/types/chat'
 
 export interface ChatInterfaceProps {
   /** 消息列表 */
   messages?: Message[]
   /** 是否正在发送消息 */
   isLoading?: boolean
-  /** 是否显示时间戳 */
-  showTimestamp?: boolean
   /** 是否启用Markdown渲染 */
   enableMarkdown?: boolean
   /** 主题模式 */
@@ -21,8 +19,6 @@ export interface ChatInterfaceProps {
   placeholder?: string
   /** 发送消息回调 */
   onSendMessage?: (message: string) => void
-  /** 消息操作回调 */
-  onMessageAction?: OnMessageAction
   /** 停止当前操作回调 */
   onStop?: () => void
   /** 清空对话回调 */
@@ -36,12 +32,10 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
     {
       messages = [],
       isLoading = false,
-      showTimestamp = true,
       enableMarkdown = true,
       theme = 'light',
       placeholder = '输入消息...',
       onSendMessage,
-      onMessageAction,
       onStop,
       onClearChat,
       className,
@@ -64,10 +58,6 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
     const handleSendMessage = (message: string) => {
       onSendMessage?.(message)
       setInputValue('')
-    }
-
-    const handleMessageAction = (messageId: string, action: 'edit' | 'delete' | 'copy' | 'retry') => {
-      onMessageAction?.(messageId, action)
     }
 
     return (
@@ -142,10 +132,8 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
                   >
                     <ChatMessage
                       message={message}
-                      showTimestamp={showTimestamp}
                       enableMarkdown={enableMarkdown}
                       theme={theme}
-                      onAction={handleMessageAction}
                     />
                   </div>
                 )

@@ -32,7 +32,7 @@ export interface MessageInputProps {
   className?: string
 }
 
-const MessageInput = React.forwardRef<HTMLDivElement, MessageInputProps>(
+const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps>(
   (
     {
       value = '',
@@ -63,7 +63,7 @@ const MessageInput = React.forwardRef<HTMLDivElement, MessageInputProps>(
       }
     }, [value])
 
-    // 自动调整文本框高度
+    // 自动调整文本框高度 - 优化依赖项
     React.useEffect(() => {
       if (multiline && textareaRef.current) {
         const textarea = textareaRef.current
@@ -74,33 +74,33 @@ const MessageInput = React.forwardRef<HTMLDivElement, MessageInputProps>(
       }
     }, [currentValue, multiline, maxRows])
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       const newValue = e.target.value
       setInternalValue(newValue)
       onChange?.(newValue)
-    }
+    }, [onChange])
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    const handleSend = React.useCallback(() => {
+      const trimmedValue = currentValue.trim()
+      if (trimmedValue && !disabled && !isLoading) {
+        onSend?.(trimmedValue)
+        if (value === undefined) {
+          setInternalValue('')
+        }
+        onChange?.('')
+      }
+    }, [currentValue, disabled, isLoading, onSend, value, onChange])
+
+    const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       onKeyDown?.(e)
       
       if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault()
         handleSend()
       }
-    }
+    }, [onKeyDown, handleSend])
 
-  const handleSend = () => {
-    const trimmedValue = currentValue.trim()
-    if (trimmedValue && !disabled && !isLoading) {
-      onSend?.(trimmedValue)
-      if (value === undefined) {
-        setInternalValue('')
-      }
-      onChange?.('')
-    }
-  }
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files
       if (files && files.length > 0) {
         onFileUpload?.(files)
@@ -109,7 +109,7 @@ const MessageInput = React.forwardRef<HTMLDivElement, MessageInputProps>(
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
-    }
+    }, [onFileUpload])
 
     const canSend = currentValue.trim().length > 0 && !disabled && !isLoading
 
@@ -218,6 +218,9 @@ const MessageInput = React.forwardRef<HTMLDivElement, MessageInputProps>(
   }
 )
 
-MessageInput.displayName = 'MessageInput'
+MessageInputComponent.displayName = 'MessageInput'
+
+// 使用 React.memo 优化性能
+const MessageInput = React.memo(MessageInputComponent)
 
 export { MessageInput }

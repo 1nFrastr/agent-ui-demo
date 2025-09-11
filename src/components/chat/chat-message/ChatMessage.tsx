@@ -1,41 +1,20 @@
 import * as React from 'react'
-import { Button } from '@/components/ui/button'
 import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { cn } from '@/utils/cn'
-import { Copy, RotateCcw, Trash2, Edit3, Wrench, CheckCircle, XCircle, Loader2 } from 'lucide-react'
-import type { Message, OnMessageAction } from '@/types/chat'
+import { Wrench, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import type { Message } from '@/types/chat'
 
 export interface ChatMessageProps {
   message: Message
-  showTimestamp?: boolean
   enableMarkdown?: boolean
   theme?: 'light' | 'dark'
-  onAction?: OnMessageAction
   className?: string
 }
 
-const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
-  ({ message, showTimestamp = true, enableMarkdown = true, theme = 'light', onAction, className }, ref) => {
+const ChatMessageComponent = React.forwardRef<HTMLDivElement, ChatMessageProps>(
+  ({ message, enableMarkdown = true, theme = 'light', className }, ref) => {
     const isUser = message.sender === 'user'
     const isSystem = message.sender === 'system'
-
-    const formatTime = (date: Date) => {
-      return new Intl.DateTimeFormat('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date)
-    }
-
-    const handleAction = (action: 'edit' | 'delete' | 'copy' | 'retry') => {
-      onAction?.(message.id, action)
-    }
-
-    const copyToClipboard = async () => {
-      if (message.content.text) {
-        await navigator.clipboard.writeText(message.content.text)
-        handleAction('copy')
-      }
-    }
 
     if (isSystem) {
       return (
@@ -132,68 +111,16 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
               </div>
             )}
           </div>
-
-          {/* 时间戳和操作按钮 */}
-          {/* <div className={cn(
-            'flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity',
-            isUser ? 'flex-row-reverse' : 'flex-row'
-          )}>
-            {showTimestamp && (
-              <span className="text-xs text-muted-foreground">
-                {formatTime(message.timestamp)}
-              </span>
-            )}
-
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={copyToClipboard}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-
-              {message.status === 'failed' && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleAction('retry')}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
-              )}
-
-              {message.editable && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleAction('edit')}
-                >
-                  <Edit3 className="h-3 w-3" />
-                </Button>
-              )}
-
-              {message.deletable && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-destructive hover:text-destructive"
-                  onClick={() => handleAction('delete')}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-          </div> */}
         </div>
       </div>
     )
   }
 )
 
-ChatMessage.displayName = 'ChatMessage'
+ChatMessageComponent.displayName = 'ChatMessage'
+export { ChatMessageComponent as ChatMessage }
 
-export { ChatMessage }
+// TODO 性能优化 - 待测试
+// 使用 React.memo 优化性能，避免不必要的重新渲染
+// const ChatMessage = React.memo(ChatMessageComponent)
+// export { ChatMessage }
