@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { cn } from '@/utils/cn'
-import { Copy, RotateCcw, Trash2, Edit3, User, Bot } from 'lucide-react'
+import { Copy, RotateCcw, Trash2, Edit3, User, Bot, Wrench, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import type { Message, OnMessageAction } from '@/types/chat'
 
 export interface ChatMessageProps {
@@ -103,6 +103,28 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
                 <pre className="text-sm overflow-x-auto">
                   <code>{message.content.code.content}</code>
                 </pre>
+              </div>
+            )}
+
+            {message.type === 'tool_call' && message.content.tool_call && (
+              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 flex-1">
+                  {message.content.tool_call.status === 'running' && (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  )}
+                  {message.content.tool_call.status === 'success' && (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  )}
+                  {message.content.tool_call.status === 'error' && (
+                    <XCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <Wrench className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    {message.content.tool_call.status === 'running' && `正在调用 ${message.content.tool_call.name}...`}
+                    {message.content.tool_call.status === 'success' && `已完成 ${message.content.tool_call.name}`}
+                    {message.content.tool_call.status === 'error' && `调用 ${message.content.tool_call.name} 失败`}
+                  </span>
+                </div>
               </div>
             )}
           </div>

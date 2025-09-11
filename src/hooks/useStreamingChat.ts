@@ -25,7 +25,9 @@ interface UseStreamingChatReturn {
 
 // 模拟AI回复的示例内容
 const AI_RESPONSES = [
-  `# 欢迎使用AI助手！
+  {
+    type: 'simple' as const,
+    content: `# 欢迎使用AI助手！
 
 我是一个智能对话助手，可以帮助你：
 
@@ -52,64 +54,112 @@ export const useCounter = (initialValue: number = 0) => {
 }
 \`\`\`
 
-有什么我可以帮助你的吗？`,
-
-  `当然！我来为你详细介绍一下 **React Hooks** 的核心概念：
-
-## React Hooks 简介
-
-React Hooks 是 React 16.8 引入的新特性，让你能在函数组件中使用状态和其他React特性。
-
-### 常用的 Hooks
-
-#### 1. useState - 状态管理
-\`\`\`javascript
-import { useState } from 'react'
-
-function Counter() {
-  const [count, setCount] = useState(0)
+有什么我可以帮助你的吗？`
+  },
   
-  return (
-    <div>
-      <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>
-        增加
-      </button>
-    </div>
-  )
-}
-\`\`\`
+  {
+    type: 'with_tools' as const,
+    steps: [
+      {
+        type: 'tool_call' as const,
+        tool: 'web_search',
+        message: '让我搜索一下最新的React最佳实践...'
+      },
+      {
+        type: 'text' as const,
+        content: `根据最新的搜索结果，这里是 **React 2024年最佳实践** 总结：
 
-#### 2. useEffect - 副作用处理
-\`\`\`javascript
-import { useEffect, useState } from 'react'
+## 🚀 现代React开发指南
 
-function UserProfile({ userId }) {
-  const [user, setUser] = useState(null)
+### 1. 函数组件 + Hooks
+\`\`\`typescript
+// ✅ 推荐：使用函数组件
+const UserProfile = ({ userId }: { userId: string }) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   
   useEffect(() => {
-    // 组件挂载或userId变化时执行
-    fetchUser(userId).then(setUser)
-    
-    // 清理函数（可选）
-    return () => {
-      // 清理逻辑
-    }
-  }, [userId]) // 依赖数组
+    fetchUser(userId).then(setUser).finally(() => setLoading(false))
+  }, [userId])
   
+  if (loading) return <div>Loading...</div>
   return <div>{user?.name}</div>
 }
 \`\`\`
 
-### Hook 规则
-1. **只在顶层调用** - 不要在循环、条件或嵌套函数中调用
-2. **只在React函数中调用** - 函数组件或自定义Hook
+### 2. TypeScript 严格模式
+\`\`\`json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  }
+}
+\`\`\`
 
-> 💡 **提示**：自定义Hook是复用状态逻辑的强大方式！
+### 3. 状态管理新趋势
+- **Zustand**: 轻量级，学习成本低
+- **Jotai**: 原子化状态管理
+- **TanStack Query**: 服务端状态缓存
 
-还有什么想了解的吗？`,
+让我知道你想深入了解哪个方面！`
+      }
+    ]
+  },
 
-  `让我为你展示一个完整的 **待办事项应用** 示例：
+  {
+    type: 'with_tools' as const,
+    steps: [
+      {
+        type: 'tool_call' as const,
+        tool: 'code_analyzer',
+        message: '正在分析您的代码结构...'
+      },
+      {
+        type: 'tool_call' as const,
+        tool: 'documentation_generator',
+        message: '生成项目文档...'
+      },
+      {
+        type: 'text' as const,
+        content: `# 项目分析报告 📊
+
+基于代码分析，我为您生成了以下建议：
+
+## 架构优化建议
+
+### 1. 组件层级优化
+\`\`\`
+src/
+├── components/
+│   ├── ui/           # 基础组件
+│   ├── features/     # 功能组件
+│   └── layouts/      # 布局组件
+├── hooks/            # 自定义Hooks
+├── utils/            # 工具函数
+└── types/            # 类型定义
+\`\`\`
+
+### 2. 性能优化点
+- ✅ 使用 \`React.memo\` 优化重渲染
+- ✅ 合理使用 \`useMemo\` 和 \`useCallback\`
+- ✅ 代码分割和懒加载
+
+### 3. 推荐的依赖包
+- **UI组件**: Radix UI + TailwindCSS
+- **状态管理**: Zustand
+- **表单处理**: React Hook Form + Zod
+- **路由**: React Router v6
+
+这些优化可以显著提升应用性能和开发体验！`
+      }
+    ]
+  },
+
+  {
+    type: 'simple' as const,
+    content: `让我为你展示一个完整的 **待办事项应用** 示例：
 
 ## TodoApp 组件实现
 
@@ -151,25 +201,10 @@ export const TodoApp: React.FC = () => {
     )
   }
 
-  // 删除任务
-  const deleteTodo = (id: number) => {
-    setTodos(prev => prev.filter(todo => todo.id !== id))
-  }
-
-  // 过滤任务
-  const filteredTodos = todos.filter(todo => {
-    switch (filter) {
-      case 'active': return !todo.completed
-      case 'completed': return todo.completed
-      default: return true
-    }
-  })
-
   return (
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">待办事项</h1>
       
-      {/* 输入框 */}
       <div className="flex gap-2 mb-4">
         <input
           type="text"
@@ -186,201 +221,17 @@ export const TodoApp: React.FC = () => {
           添加
         </button>
       </div>
-
-      {/* 过滤器 */}
-      <div className="flex gap-2 mb-4">
-        {(['all', 'active', 'completed'] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={\`px-3 py-1 rounded \${
-              filter === f ? 'bg-blue-500 text-white' : 'bg-gray-200'
-            }\`}
-          >
-            {f === 'all' ? '全部' : f === 'active' ? '进行中' : '已完成'}
-          </button>
-        ))}
-      </div>
-
-      {/* 任务列表 */}
-      <ul className="space-y-2">
-        {filteredTodos.map(todo => (
-          <li 
-            key={todo.id}
-            className="flex items-center gap-2 p-2 border rounded"
-          >
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => toggleTodo(todo.id)}
-            />
-            <span 
-              className={\`flex-1 \${
-                todo.completed ? 'line-through text-gray-500' : ''
-              }\`}
-            >
-              {todo.text}
-            </span>
-            <button
-              onClick={() => deleteTodo(todo.id)}
-              className="text-red-500 hover:text-red-700"
-            >
-              删除
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {filteredTodos.length === 0 && (
-        <p className="text-gray-500 text-center mt-4">
-          {filter === 'all' ? '暂无任务' : 
-           filter === 'active' ? '没有进行中的任务' : '没有已完成的任务'}
-        </p>
-      )}
     </div>
   )
 }
 \`\`\`
 
-## 特性说明
-
-### 🎯 核心功能
-- ✅ **添加任务**：输入框 + 回车键/按钮
-- ✅ **切换状态**：点击复选框完成/取消任务  
-- ✅ **删除任务**：删除按钮移除任务
-- ✅ **过滤查看**：全部/进行中/已完成
-
-### 🛠️ 技术亮点
-- **TypeScript**：完整的类型定义
-- **React Hooks**：useState 管理状态
-- **响应式设计**：TailwindCSS 样式
-- **用户体验**：键盘快捷键支持
-
-这个例子展示了React开发的最佳实践，你可以基于此扩展更多功能！`,
-
-  `# 现代前端开发技术栈
-
-让我为你介绍当前最流行的前端技术栈：
-
-## 🚀 核心框架对比
-
-| 框架 | 优势 | 适用场景 |
-|------|------|----------|
-| **React** | 生态丰富、学习资源多 | 大型应用、企业级项目 |
-| **Vue.js** | 上手简单、文档友好 | 中小型项目、快速开发 |
-| **Angular** | 完整解决方案、企业级 | 大型企业应用 |
-| **Svelte** | 编译时优化、体积小 | 性能敏感应用 |
-
-## 📦 构建工具演进
-
-### 传统构建工具
-\`\`\`bash
-# Webpack 配置示例
-module.exports = {
-  entry: './src/index.js',
-  module: {
-    rules: [
-      {
-        test: /\\.jsx?$/,
-        use: 'babel-loader',
-        exclude: /node_modules/
-      }
-    ]
+这个例子展示了React开发的最佳实践！`
   }
-}
-\`\`\`
-
-### 现代构建工具
-\`\`\`json
-{
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  }
-}
-\`\`\`
-
-## 🎨 样式解决方案
-
-### 1. TailwindCSS - 实用优先
-\`\`\`html
-<div class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-600">
-  <h1 class="text-4xl font-bold text-white">Hello World</h1>
-</div>
-\`\`\`
-
-### 2. CSS-in-JS - 动态样式
-\`\`\`javascript
-import styled from 'styled-components'
-
-const Button = styled.button\`
-  padding: 12px 24px;
-  background: \${props => props.primary ? '#007bff' : '#6c757d'};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  
-  &:hover {
-    opacity: 0.8;
-  }
-\`
-\`\`\`
-
-## 🔧 开发工具链
-
-### TypeScript 配置
-\`\`\`json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
-  }
-}
-\`\`\`
-
-## 🧪 测试策略
-
-\`\`\`javascript
-// Jest + Testing Library
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Button } from './Button'
-
-describe('Button Component', () => {
-  test('renders with correct text', () => {
-    render(<Button>Click me</Button>)
-    expect(screen.getByText('Click me')).toBeInTheDocument()
-  })
-
-  test('calls onClick when clicked', () => {
-    const handleClick = jest.fn()
-    render(<Button onClick={handleClick}>Click me</Button>)
-    
-    fireEvent.click(screen.getByText('Click me'))
-    expect(handleClick).toHaveBeenCalledTimes(1)
-  })
-})
-\`\`\`
-
-> 💡 **建议**：选择技术栈时要考虑团队经验、项目规模和长期维护成本！
-
-还想了解哪个方面的详细内容？`
 ]
 
 export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStreamingChatReturn => {
-  const { streamDelay = 30, chunkSize = 2 } = options
+  const { streamDelay = 10, chunkSize = 50 } = options
   
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -414,77 +265,161 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
     setIsLoading(false)
   }, [])
 
+  const streamContent = useCallback(() => {
+    if (!currentStreamRef.current) return
+    
+    const { messageId, fullContent, currentIndex } = currentStreamRef.current
+    
+    if (currentIndex >= fullContent.length) {
+      // 流式回复完成
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, content: { text: fullContent }, status: 'delivered' as const }
+            : msg
+        )
+      )
+      currentStreamRef.current = null
+      setIsLoading(false)
+      return
+    }
+    
+    // 计算下一个chunk的结束位置
+    const nextIndex = Math.min(currentIndex + chunkSize, fullContent.length)
+    const partialContent = fullContent.slice(0, nextIndex)
+    
+    // 更新消息内容
+    setMessages(prev => 
+      prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, content: { text: partialContent } }
+          : msg
+      )
+    )
+    
+    // 更新当前索引
+    currentStreamRef.current.currentIndex = nextIndex
+    
+    // 继续流式回复
+    streamingTimeoutRef.current = setTimeout(streamContent, streamDelay)
+  }, [streamDelay, chunkSize])
+
   const simulateAIResponse = useCallback((_userMessage: string) => {
     console.log('simulateAIResponse called with:', _userMessage)
     setIsLoading(true)
     
     // 随机选择一个AI回复
     const responseIndex = Math.floor(Math.random() * AI_RESPONSES.length)
-    const fullResponse = AI_RESPONSES[responseIndex]
+    const selectedResponse = AI_RESPONSES[responseIndex]
     
-    // 创建AI消息
-    const aiMessageId = generateId()
-    const aiMessage: Message = {
-      id: aiMessageId,
-      sender: 'assistant',
-      type: 'text',
-      content: { text: '' },
-      timestamp: new Date(),
-      status: 'pending',
-    }
-    
-    setMessages(prev => [...prev, aiMessage])
-    
-    // 设置流式回复的状态
-    currentStreamRef.current = {
-      messageId: aiMessageId,
-      fullContent: fullResponse,
-      currentIndex: 0
-    }
-    
-    // 开始流式回复
-    const streamContent = () => {
-      if (!currentStreamRef.current) return
-      
-      const { messageId, fullContent, currentIndex } = currentStreamRef.current
-      
-      if (currentIndex >= fullContent.length) {
-        // 流式回复完成
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === messageId 
-              ? { ...msg, content: { text: fullContent }, status: 'delivered' as const }
-              : msg
-          )
-        )
-        currentStreamRef.current = null
-        setIsLoading(false)
-        return
+    if (selectedResponse.type === 'simple') {
+      // 简单的文本回复
+      const aiMessageId = generateId()
+      const aiMessage: Message = {
+        id: aiMessageId,
+        sender: 'assistant',
+        type: 'text',
+        content: { text: '' },
+        timestamp: new Date(),
+        status: 'pending',
       }
       
-      // 计算下一个chunk的结束位置
-      const nextIndex = Math.min(currentIndex + chunkSize, fullContent.length)
-      const partialContent = fullContent.slice(0, nextIndex)
+      setMessages(prev => [...prev, aiMessage])
       
-      // 更新消息内容
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, content: { text: partialContent } }
-            : msg
-        )
-      )
+      // 设置流式回复的状态
+      currentStreamRef.current = {
+        messageId: aiMessageId,
+        fullContent: selectedResponse.content,
+        currentIndex: 0
+      }
       
-      // 更新当前索引
-      currentStreamRef.current.currentIndex = nextIndex
+      // 开始流式回复
+      setTimeout(() => streamContent(), 500)
+    } else {
+      // 包含工具调用的回复
+      let stepIndex = 0
       
-      // 继续流式回复
-      streamingTimeoutRef.current = setTimeout(streamContent, streamDelay)
+      const processNextStep = () => {
+        if (stepIndex >= selectedResponse.steps.length) {
+          setIsLoading(false)
+          return
+        }
+        
+        const step = selectedResponse.steps[stepIndex]
+        
+        if (step.type === 'tool_call') {
+          // 创建工具调用消息
+          const toolMessageId = generateId()
+          const toolMessage: Message = {
+            id: toolMessageId,
+            sender: 'assistant',
+            type: 'tool_call',
+            content: { 
+              tool_call: {
+                name: step.tool,
+                status: 'running'
+              }
+            },
+            timestamp: new Date(),
+            status: 'delivered',
+          }
+          
+          setMessages(prev => [...prev, toolMessage])
+          
+          // 模拟工具调用完成
+          setTimeout(() => {
+            setMessages(prev => 
+              prev.map(msg => 
+                msg.id === toolMessageId 
+                  ? { 
+                      ...msg, 
+                      content: { 
+                        tool_call: {
+                          name: step.tool,
+                          status: 'success'
+                        }
+                      }
+                    }
+                  : msg
+              )
+            )
+            
+            stepIndex++
+            setTimeout(processNextStep, 300)
+          }, 1500 + Math.random() * 1000) // 1.5-2.5秒的随机延迟
+          
+        } else if (step.type === 'text') {
+          // 创建文本消息并开始流式回复
+          const textMessageId = generateId()
+          const textMessage: Message = {
+            id: textMessageId,
+            sender: 'assistant',
+            type: 'text',
+            content: { text: '' },
+            timestamp: new Date(),
+            status: 'pending',
+          }
+          
+          setMessages(prev => [...prev, textMessage])
+          
+          // 设置流式回复的状态
+          currentStreamRef.current = {
+            messageId: textMessageId,
+            fullContent: step.content,
+            currentIndex: 0
+          }
+          
+          // 开始流式回复
+          setTimeout(() => {
+            streamContent()
+            stepIndex++
+          }, 500)
+        }
+      }
+      
+      processNextStep()
     }
-    
-    // 延迟开始，模拟思考时间
-    setTimeout(streamContent, 500)
-  }, [streamDelay, chunkSize])
+  }, [streamContent])
 
   const sendMessage = useCallback((content: string) => {
     const userMessage: Message = {

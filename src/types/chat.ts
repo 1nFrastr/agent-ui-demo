@@ -11,7 +11,12 @@ export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'failed'
 /**
  * 消息类型
  */
-export type MessageType = 'text' | 'code' | 'image' | 'file' | 'system'
+export type MessageType = 'text' | 'code' | 'image' | 'file' | 'system' | 'tool_call'
+
+/**
+ * 工具调用状态
+ */
+export type ToolCallStatus = 'running' | 'success' | 'error'
 
 /**
  * 消息内容接口
@@ -38,6 +43,13 @@ export interface MessageContent {
     size: number
     type: string
   }
+  /** 工具调用信息 */
+  tool_call?: {
+    name: string
+    status: ToolCallStatus
+    parameters?: Record<string, unknown>
+    result?: string
+  }
 }
 
 /**
@@ -61,7 +73,7 @@ export interface Message {
   /** 是否可删除 */
   deletable?: boolean
   /** 消息元数据 */
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 /**
