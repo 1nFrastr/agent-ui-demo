@@ -11,8 +11,6 @@ export interface ChatInterfaceProps {
   messages?: Message[]
   /** 是否正在发送消息 */
   isLoading?: boolean
-  /** 是否显示头像 */
-  showAvatar?: boolean
   /** 是否显示时间戳 */
   showTimestamp?: boolean
   /** 是否启用Markdown渲染 */
@@ -38,7 +36,6 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
     {
       messages = [],
       isLoading = false,
-      showAvatar = true,
       showTimestamp = true,
       enableMarkdown = true,
       theme = 'light',
@@ -111,7 +108,7 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
         {/* 消息列表容器 */}
         <div
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto px-4 py-6 space-y-4"
+          className="flex-1 overflow-y-auto px-4 py-6"
         >
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
@@ -125,17 +122,34 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
             </div>
           ) : (
             <>
-              {messages.map((message) => (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  showAvatar={showAvatar}
-                  showTimestamp={showTimestamp}
-                  enableMarkdown={enableMarkdown}
-                  theme={theme}
-                  onAction={handleMessageAction}
-                />
-              ))}
+              {messages.map((message, index) => {
+                const isUser = message.sender === 'user'
+                const prevMessage = index > 0 ? messages[index - 1] : null
+                const isConsecutiveAssistant = 
+                  !isUser && 
+                  prevMessage && 
+                  prevMessage.sender === 'assistant'
+                
+                return (
+                  <div 
+                    key={message.id}
+                    className={cn(
+                      // 用户消息保持正常间距
+                      isUser ? 'mb-4' : 
+                      // AI连续消息间距很小，看起来像同一条消息
+                      isConsecutiveAssistant ? 'mb-1' : 'mb-3'
+                    )}
+                  >
+                    <ChatMessage
+                      message={message}
+                      showTimestamp={showTimestamp}
+                      enableMarkdown={enableMarkdown}
+                      theme={theme}
+                      onAction={handleMessageAction}
+                    />
+                  </div>
+                )
+              })}
               <div ref={messagesEndRef} />
             </>
           )}

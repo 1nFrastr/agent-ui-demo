@@ -1,14 +1,12 @@
 import * as React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { cn } from '@/utils/cn'
-import { Copy, RotateCcw, Trash2, Edit3, User, Bot, Wrench, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { Copy, RotateCcw, Trash2, Edit3, Wrench, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import type { Message, OnMessageAction } from '@/types/chat'
 
 export interface ChatMessageProps {
   message: Message
-  showAvatar?: boolean
   showTimestamp?: boolean
   enableMarkdown?: boolean
   theme?: 'light' | 'dark'
@@ -17,7 +15,7 @@ export interface ChatMessageProps {
 }
 
 const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
-  ({ message, showAvatar = true, showTimestamp = true, enableMarkdown = true, theme = 'light', onAction, className }, ref) => {
+  ({ message, showTimestamp = true, enableMarkdown = true, theme = 'light', onAction, className }, ref) => {
     const isUser = message.sender === 'user'
     const isSystem = message.sender === 'system'
 
@@ -56,28 +54,28 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
       <div
         ref={ref}
         className={cn(
-          'flex gap-3 max-w-4xl mx-auto px-4 py-4 group',
-          isUser ? 'flex-row-reverse' : 'flex-row',
+          'flex gap-3 group',
+          isUser 
+            ? 'flex-row-reverse max-w-4xl mx-auto px-4 py-4' 
+            : 'flex-row max-w-none px-4 py-1', // AI消息减少垂直间距
           className
         )}
       >
-        {showAvatar && (
-          <Avatar className="h-8 w-8 shrink-0">
-            <AvatarImage src={isUser ? undefined : '/bot-avatar.png'} />
-            <AvatarFallback>
-              {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-            </AvatarFallback>
-          </Avatar>
-        )}
-
-        <div className={cn('flex flex-col gap-1 flex-1', isUser ? 'items-end' : 'items-start')}>
+        {/* 移除头像显示 */}
+        
+        <div className={cn(
+          'flex flex-col gap-1 flex-1', 
+          isUser 
+            ? 'items-end' 
+            : 'items-start'
+        )}>
           {/* 消息内容 */}
           <div
             className={cn(
-              'rounded-lg px-4 py-2 max-w-2xl break-words',
+              'break-words',
               isUser
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground',
+                ? 'bg-primary text-primary-foreground rounded-lg px-4 py-2 max-w-2xl'
+                : 'text-foreground w-full', // AI消息占满宽度
               message.status === 'failed' && 'border-destructive border'
             )}
           >
@@ -86,17 +84,23 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
                 <MarkdownRenderer 
                   content={message.content.text} 
                   theme={theme}
-                  className="text-sm"
+                  className={cn(
+                    "text-sm",
+                    isUser ? "" : "prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-pre:bg-muted/50 prose-pre:border prose-blockquote:text-muted-foreground"
+                  )}
                 />
               ) : (
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                <p className={cn(
+                  "text-sm leading-relaxed whitespace-pre-wrap",
+                  isUser ? "" : "text-foreground"
+                )}>
                   {message.content.text}
                 </p>
               )
             )}
             
             {message.type === 'code' && message.content.code && (
-              <div className="bg-black/10 dark:bg-white/10 rounded p-3 my-2">
+              <div className="bg-muted/50 border rounded p-3 my-2">
                 <div className="text-xs text-muted-foreground mb-2">
                   {message.content.code.language}
                 </div>
@@ -107,7 +111,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
             )}
 
             {message.type === 'tool_call' && message.content.tool_call && (
-              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-1 p-1 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800 my-1">
                 <div className="flex items-center gap-2 flex-1">
                   {message.content.tool_call.status === 'running' && (
                     <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
@@ -119,7 +123,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
                     <XCircle className="h-4 w-4 text-red-600" />
                   )}
                   <Wrench className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  <span className=" font-medium text-blue-900 dark:text-blue-100">
                     {message.content.tool_call.status === 'running' && `正在调用 ${message.content.tool_call.name}...`}
                     {message.content.tool_call.status === 'success' && `已完成 ${message.content.tool_call.name}`}
                     {message.content.tool_call.status === 'error' && `调用 ${message.content.tool_call.name} 失败`}
@@ -130,7 +134,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
           </div>
 
           {/* 时间戳和操作按钮 */}
-          <div className={cn(
+          {/* <div className={cn(
             'flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity',
             isUser ? 'flex-row-reverse' : 'flex-row'
           )}>
@@ -183,7 +187,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
                 </Button>
               )}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     )
