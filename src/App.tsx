@@ -17,7 +17,6 @@ function App() {
     sendMessage,
     stopStreaming,
     clearChat,
-    deleteMessage,
   } = useStreamingChat()
 
   // 示例消息数据
@@ -67,13 +66,6 @@ export const useCounter = (initialValue: number = 0) => {
     }
   ]
 
-  const handleMessageAction = (messageId: string, action: 'edit' | 'delete' | 'copy' | 'retry') => {
-    console.log(`消息 ${messageId} 执行操作: ${action}`)
-    if (action === 'delete') {
-      deleteMessage(messageId)
-    }
-  }
-
   if (showChat) {
     return (
       <div className="h-screen">
@@ -82,7 +74,6 @@ export const useCounter = (initialValue: number = 0) => {
           messages={messages}
           isLoading={isLoading}
           onSendMessage={sendMessage}
-          onMessageAction={handleMessageAction}
           onStop={stopStreaming}
           onClearChat={clearChat}
           placeholder="发送消息开始对话..."
@@ -173,9 +164,6 @@ export const useCounter = (initialValue: number = 0) => {
                 key={message.id}
                 message={message}
                 enableMarkdown={true}
-                onAction={(messageId, action) => {
-                  console.log(`消息 ${messageId} 执行操作: ${action}`)
-                }}
               />
             ))}
           </div>

@@ -27,7 +27,7 @@ export interface ChatInterfaceProps {
   className?: string
 }
 
-const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
+export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
   (
     {
       messages = [],
@@ -157,7 +157,3 @@ const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps>(
     )
   }
 )
-
-ChatInterface.displayName = 'ChatInterface'
-
-export { ChatInterface }
