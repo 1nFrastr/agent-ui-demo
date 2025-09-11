@@ -32,7 +32,7 @@ export interface MessageInputProps {
   className?: string
 }
 
-const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps>(
+export const MessageInput = React.memo(React.forwardRef<HTMLDivElement, MessageInputProps>(
   (
     {
       value = '',
@@ -51,17 +51,14 @@ const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps
     },
     ref
   ) => {
-    const [internalValue, setInternalValue] = React.useState(value)
+    // 简化状态管理：明确区分受控和非受控模式
+    const isControlled = value !== undefined
+    const [internalValue, setInternalValue] = React.useState('')
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
     const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-    const currentValue = value !== undefined ? value : internalValue
-
-    React.useEffect(() => {
-      if (value !== undefined) {
-        setInternalValue(value)
-      }
-    }, [value])
+    // 当前显示的值
+    const displayValue = isControlled ? value : internalValue
 
     // 自动调整文本框高度 - 优化依赖项
     React.useEffect(() => {
@@ -72,24 +69,28 @@ const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps
         const maxHeight = parseFloat(getComputedStyle(textarea).lineHeight) * maxRows
         textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`
       }
-    }, [currentValue, multiline, maxRows])
+    }, [displayValue, multiline, maxRows])
 
     const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       const newValue = e.target.value
-      setInternalValue(newValue)
+      if (!isControlled) {
+        setInternalValue(newValue)
+      }
       onChange?.(newValue)
-    }, [onChange])
+    }, [isControlled, onChange])
 
     const handleSend = React.useCallback(() => {
-      const trimmedValue = currentValue.trim()
+      const trimmedValue = displayValue.trim()
       if (trimmedValue && !disabled && !isLoading) {
         onSend?.(trimmedValue)
-        if (value === undefined) {
+        // 只在非受控模式下清空内部状态
+        if (!isControlled) {
           setInternalValue('')
         }
+        // 无论何种模式都通知父组件清空
         onChange?.('')
       }
-    }, [currentValue, disabled, isLoading, onSend, value, onChange])
+    }, [displayValue, disabled, isLoading, onSend, isControlled, onChange])
 
     const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       onKeyDown?.(e)
@@ -111,7 +112,7 @@ const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps
       }
     }, [onFileUpload])
 
-    const canSend = currentValue.trim().length > 0 && !disabled && !isLoading
+    const canSend = displayValue.trim().length > 0 && !disabled && !isLoading
 
     return (
       <div
@@ -147,7 +148,7 @@ const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps
           {multiline ? (
             <textarea
               ref={textareaRef}
-              value={currentValue}
+              value={displayValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
@@ -164,7 +165,7 @@ const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps
           ) : (
             <input
               type="text"
-              value={currentValue}
+              value={displayValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
@@ -216,11 +217,4 @@ const MessageInputComponent = React.forwardRef<HTMLDivElement, MessageInputProps
       </div>
     )
   }
-)
-
-MessageInputComponent.displayName = 'MessageInput'
-
-// 使用 React.memo 优化性能
-const MessageInput = React.memo(MessageInputComponent)
-
-export { MessageInput }
+))
