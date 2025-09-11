@@ -11,7 +11,7 @@ export interface ChatMessageProps {
   className?: string
 }
 
-const ChatMessageComponent = React.forwardRef<HTMLDivElement, ChatMessageProps>(
+export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessageProps>(
   ({ message, enableMarkdown = true, theme = 'light', className }, ref) => {
     const isUser = message.sender === 'user'
     const isSystem = message.sender === 'system'
@@ -115,12 +115,4 @@ const ChatMessageComponent = React.forwardRef<HTMLDivElement, ChatMessageProps>(
       </div>
     )
   }
-)
-
-ChatMessageComponent.displayName = 'ChatMessage'
-export { ChatMessageComponent as ChatMessage }
-
-// TODO 性能优化 - 待测试
-// 使用 React.memo 优化性能，避免不必要的重新渲染
-// const ChatMessage = React.memo(ChatMessageComponent)
-// export { ChatMessage }
+))
