@@ -40,8 +40,7 @@ export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessa
           className
         )}
       >
-        {/* 移除头像显示 */}
-        
+                
         <div className={cn(
           'flex flex-col gap-1 flex-1', 
           isUser 
@@ -76,17 +75,6 @@ export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessa
                   {message.content.text}
                 </p>
               )
-            )}
-            
-            {message.type === 'code' && message.content.code && (
-              <div className="bg-muted/50 border rounded p-3 my-2">
-                <div className="text-xs text-muted-foreground mb-2">
-                  {message.content.code.language}
-                </div>
-                <pre className="text-sm overflow-x-auto">
-                  <code>{message.content.code.content}</code>
-                </pre>
-              </div>
             )}
 
             {message.type === 'tool_call' && message.content.tool_call && (
