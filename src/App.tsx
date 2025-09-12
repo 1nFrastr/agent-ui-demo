@@ -2,17 +2,13 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
-import { ChatWithToolDetailsDemo } from '@/components/chat/ChatWithToolDetailsDemo'
-import { LayoutDemo } from '@/components/chat/LayoutDemo'
 import { useStreamingChat } from '@/hooks'
-import { Send, MessageCircle, Sparkles, Wrench, Layout } from 'lucide-react'
+import { Send, MessageCircle, Sparkles } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 function App() {
   const [count, setCount] = useState(0)
   const [showChat, setShowChat] = useState(false)
-  const [showToolDemo, setShowToolDemo] = useState(false)
-  const [showLayoutDemo, setShowLayoutDemo] = useState(false)
   
   // 使用流式聊天Hook
   const {
@@ -69,14 +65,6 @@ export const useCounter = (initialValue: number = 0) => {
       status: 'delivered',
     }
   ]
-
-  if (showLayoutDemo) {
-    return <LayoutDemo />
-  }
-
-  if (showToolDemo) {
-    return <ChatWithToolDetailsDemo />
-  }
 
   if (showChat) {
     return (
@@ -162,24 +150,6 @@ export const useCounter = (initialValue: number = 0) => {
             >
               <MessageCircle className="mr-3 h-6 w-6" />
               基础对话演示
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => setShowToolDemo(true)}
-              className="px-8 py-4 text-lg"
-            >
-              <Wrench className="mr-3 h-6 w-6" />
-              工具调用演示
-            </Button>
-            <Button 
-              size="lg" 
-              variant="secondary"
-              onClick={() => setShowLayoutDemo(true)}
-              className="px-8 py-4 text-lg"
-            >
-              <Layout className="mr-3 h-6 w-6" />
-              布局演示
             </Button>
           </div>
         </div>
