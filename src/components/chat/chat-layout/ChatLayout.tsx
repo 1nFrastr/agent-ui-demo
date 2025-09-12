@@ -2,7 +2,7 @@ import * as React from 'react'
 import { ChatInterface } from '@/components/chat/chat-interface'
 import { ToolDetailsPanel } from '@/components/chat/tool-details-panel'
 import { cn } from '@/utils/cn'
-import type { Message, ToolCallDetails } from '@/types/chat'
+import type { Message } from '@/types/chat'
 
 export interface ChatLayoutProps {
   /** 消息列表 */
@@ -36,17 +36,17 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   onClearChat,
   className,
 }) => {
-  const [selectedToolDetails, setSelectedToolDetails] = React.useState<ToolCallDetails | null>(null)
+  const [selectedToolMessageId, setSelectedToolMessageId] = React.useState<string | null>(null)
   const [isToolDetailsPanelOpen, setIsToolDetailsPanelOpen] = React.useState(false)
 
-  const handleToolDetailsClick = (toolDetails: ToolCallDetails) => {
-    setSelectedToolDetails(toolDetails)
+  const handleToolDetailsClick = (messageId: string) => {
+    setSelectedToolMessageId(messageId)
     setIsToolDetailsPanelOpen(true)
   }
 
   const handleCloseToolDetails = () => {
     setIsToolDetailsPanelOpen(false)
-    setSelectedToolDetails(null)
+    setSelectedToolMessageId(null)
   }
 
   return (
@@ -85,14 +85,13 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
           ? 'w-2/3 opacity-100 transition-all duration-300' // 展开：300ms
           : 'w-0 opacity-0 transition-all duration-500' // 收起：500ms
       )}>
-        {selectedToolDetails && (
-          <ToolDetailsPanel
-            toolDetails={selectedToolDetails}
-            isOpen={isToolDetailsPanelOpen}
-            onClose={handleCloseToolDetails}
-            className="w-full"
-          />
-        )}
+        <ToolDetailsPanel
+          messageId={selectedToolMessageId}
+          messages={messages}
+          isOpen={isToolDetailsPanelOpen}
+          onClose={handleCloseToolDetails}
+          className="w-full"
+        />
       </div>
     </div>
   )

@@ -15,13 +15,15 @@ import {
   Clock,
   Play
 } from 'lucide-react'
-import type { ToolCallDetails, ToolCallType } from '@/types/chat'
+import type { ToolCallDetails, ToolCallType, Message } from '@/types/chat'
 import { WebSearchDetails } from './WebSearchDetails'
 import { WebContentDetails } from './WebContentDetails'
 
 interface ToolDetailsPanelProps {
-  /** 工具调用详情 */
-  toolDetails: ToolCallDetails | null
+  /** 工具调用消息的ID */
+  messageId: string | null
+  /** 消息列表 */
+  messages: Message[]
   /** 是否显示面板 */
   isOpen: boolean
   /** 关闭面板回调 */
@@ -224,11 +226,24 @@ const GenericDetails: React.FC<{ details: ToolCallDetails }> = ({ details }) => 
 )
 
 export const ToolDetailsPanel: React.FC<ToolDetailsPanelProps> = ({
-  toolDetails,
+  messageId,
+  messages,
   isOpen,
   onClose,
   className
 }) => {
+  // 根据 messageId 实时获取工具详情
+  const toolDetails = React.useMemo(() => {
+    if (!messageId) return null
+    
+    const message = messages.find(msg => msg.id === messageId)
+    if (!message || message.type !== 'tool_call' || !message.content.tool_call) {
+      return null
+    }
+    
+    return message.content.tool_call
+  }, [messageId, messages])
+
   if (!isOpen || !toolDetails) {
     return null
   }

@@ -4,7 +4,7 @@ import { MessageInput } from '@/components/chat/message-input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { MessageCircle, MoreVertical, Trash2 } from 'lucide-react'
-import type { Message, ToolCallDetails } from '@/types/chat'
+import type { Message } from '@/types/chat'
 
 export interface ChatInterfaceProps {
   /** 消息列表 */
@@ -24,7 +24,7 @@ export interface ChatInterfaceProps {
   /** 清空对话回调 */
   onClearChat?: () => void
   /** 工具详情点击回调 */
-  onToolDetailsClick?: (toolDetails: ToolCallDetails) => void
+  onToolDetailsClick?: (messageId: string) => void
   /** 自定义类名 */
   className?: string
 }
@@ -63,8 +63,8 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
       setInputValue('')
     }
 
-    const handleToolDetailsClick = (toolDetails: ToolCallDetails) => {
-      onToolDetailsClick?.(toolDetails)
+    const handleToolDetailsClick = (messageId: string) => {
+      onToolDetailsClick?.(messageId)
     }
 
     return (

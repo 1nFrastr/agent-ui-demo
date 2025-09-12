@@ -3,13 +3,13 @@ import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { Wrench, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react'
-import type { Message, ToolCallDetails } from '@/types/chat'
+import type { Message } from '@/types/chat'
 
 export interface ChatMessageProps {
   message: Message
   enableMarkdown?: boolean
   theme?: 'light' | 'dark'
-  onToolDetailsClick?: (toolDetails: ToolCallDetails) => void
+  onToolDetailsClick?: (messageId: string) => void
   className?: string
 }
 
@@ -104,7 +104,7 @@ export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessa
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onToolDetailsClick(message.content.tool_call!)}
+                    onClick={() => onToolDetailsClick(message.id)}
                     className="h-8 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-800/20"
                   >
                     <ExternalLink className="h-3 w-3 mr-1" />
