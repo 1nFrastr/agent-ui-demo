@@ -3,12 +3,42 @@ import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
 import { useStreamingChat } from '@/hooks'
-import { Send, MessageCircle, Sparkles } from 'lucide-react'
+import { Send, MessageCircle, Sparkles, Code2 } from 'lucide-react'
 import type { Message } from '@/types/chat'
+
+// 真正的ToolPanel组件
+import { ToolPanel } from './components/tool-panel/ToolPanel'
+import { sampleFileSystem } from './components/tool-panel/sampleData'
+
+// ToolPanel演示组件
+const ToolPanelDemo = () => {
+  return (
+    <div className="h-screen p-4">
+      <div className="text-center mb-4">
+        <h1 className="text-2xl font-bold">AI编程工具面板演示</h1>
+        <p className="text-gray-600">文件浏览器 + HTML预览功能</p>
+      </div>
+      <div className="h-5/6">
+        <ToolPanel 
+          files={sampleFileSystem}
+          defaultTab="files"
+          readOnly={false}
+          onFileSelect={(file) => {
+            console.log('选择文件:', file.name)
+          }}
+          onFileEdit={(file, content) => {
+            console.log('编辑文件:', file.name, '内容长度:', content.length)
+          }}
+        />
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [count, setCount] = useState(0)
   const [showChat, setShowChat] = useState(false)
+  const [showToolPanel, setShowToolPanel] = useState(false)
   
   // 使用流式聊天Hook
   const {
@@ -65,6 +95,10 @@ export const useCounter = (initialValue: number = 0) => {
       status: 'delivered',
     }
   ]
+
+  if (showToolPanel) {
+    return <ToolPanelDemo />
+  }
 
   if (showChat) {
     return (
@@ -150,6 +184,15 @@ export const useCounter = (initialValue: number = 0) => {
             >
               <MessageCircle className="mr-3 h-6 w-6" />
               基础对话演示
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => setShowToolPanel(true)}
+              className="px-8 py-4 text-lg"
+            >
+              <Code2 className="mr-3 h-6 w-6" />
+              编程工具面板
             </Button>
           </div>
         </div>
