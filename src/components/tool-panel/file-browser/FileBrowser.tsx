@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { cn } from '@/utils'
 import type { FileBrowserProps, SimpleFile } from '../types'
+import { SyntaxHighlightEditor } from '@/components/ui/syntax-highlight-editor'
 import { 
   File, 
   Folder, 
@@ -125,20 +126,15 @@ const FileEditor: React.FC<{
       </div>
 
       {/* 编辑器内容 */}
-      <div className="flex-1 p-3">
-        <textarea
+      <div className="flex-1 relative">
+        <SyntaxHighlightEditor
           value={content}
-          onChange={(e) => handleContentChange(e.target.value)}
+          onChange={handleContentChange}
+          filename={file.name}
           readOnly={readOnly}
-          className={cn(
-            'w-full h-full resize-none border border-gray-200 dark:border-gray-600 rounded p-3',
-            'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100',
-            'focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'font-mono text-sm leading-relaxed',
-            readOnly && 'bg-gray-50 dark:bg-gray-800 cursor-default'
-          )}
           placeholder={readOnly ? '文件内容为空' : '开始编辑文件内容...'}
-          spellCheck={false}
+          showLineNumbers={true}
+          className="h-full"
         />
       </div>
     </div>
@@ -256,10 +252,16 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
             </div>
 
             {/* 文件内容预览 */}
-            <div className="flex-1 p-3 overflow-auto">
-              <pre className="text-sm text-gray-900 dark:text-gray-100 font-mono leading-relaxed whitespace-pre-wrap">
-                {selectedFileObj.content || '文件内容为空'}
-              </pre>
+            <div className="flex-1 relative">
+              <SyntaxHighlightEditor
+                value={selectedFileObj.content || ''}
+                onChange={() => {}} // 预览模式不允许编辑
+                filename={selectedFileObj.name}
+                readOnly={true}
+                placeholder="文件内容为空"
+                showLineNumbers={true}
+                className="h-full"
+              />
             </div>
           </div>
         ) : (
