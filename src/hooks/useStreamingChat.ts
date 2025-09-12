@@ -321,7 +321,7 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
   
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const streamingTimeoutRef = useRef<number | null>(null)
   const currentStreamRef = useRef<{
     messageId: string
     fullContent: string
