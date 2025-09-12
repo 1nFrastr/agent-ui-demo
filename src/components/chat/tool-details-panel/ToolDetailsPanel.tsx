@@ -16,6 +16,8 @@ import {
   Play
 } from 'lucide-react'
 import type { ToolCallDetails, ToolCallType } from '@/types/chat'
+import { WebSearchDetails } from './WebSearchDetails'
+import { WebContentDetails } from './WebContentDetails'
 
 interface ToolDetailsPanelProps {
   /** 工具调用详情 */
@@ -54,6 +56,10 @@ const getToolIcon = (type: ToolCallType) => {
     case 'analysis':
       return BarChart3
     case 'api_request':
+      return Globe
+    case 'web_search':
+      return Search
+    case 'web_content':
       return Globe
     default:
       return Play
@@ -240,6 +246,10 @@ export const ToolDetailsPanel: React.FC<ToolDetailsPanelProps> = ({
         return <TerminalCommandDetails details={toolDetails} />
       case 'code_generation':
         return <CodeGenerationDetails details={toolDetails} />
+      case 'web_search':
+        return <WebSearchDetails details={toolDetails} />
+      case 'web_content':
+        return <WebContentDetails details={toolDetails} />
       default:
         return <GenericDetails details={toolDetails} />
     }

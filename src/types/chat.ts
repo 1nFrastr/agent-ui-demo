@@ -28,7 +28,71 @@ export type ToolCallType =
   | 'api_request'         // API请求
   | 'search'              // 搜索
   | 'analysis'            // 分析
+  | 'web_search'          // 网页搜索
+  | 'web_content'         // 网页读取
   | 'other'               // 其他
+
+/**
+ * 网页搜索结果项
+ */
+export interface WebSearchResultItem {
+  /** 网页标题 */
+  title: string
+  /** 网页链接 */
+  url: string
+  /** 网页概述/摘要 */
+  summary: string
+  /** 网站LOGO/图标URL */
+  favicon?: string
+  /** 网站域名 */
+  domain?: string
+}
+
+/**
+ * 网页搜索参数和结果
+ */
+export interface WebSearchData {
+  /** 搜索关键词 */
+  query: string
+  /** 搜索结果列表 */
+  results: WebSearchResultItem[]
+  /** 搜索用时 */
+  searchTime?: number
+  /** 结果总数 */
+  totalResults?: number
+}
+
+/**
+ * 网页内容数据
+ */
+export interface WebContentData {
+  /** 网页链接地址 */
+  url: string
+  /** 网页标题 */
+  title: string
+  /** 读取的内容 */
+  content: string
+  /** 提取的图片列表 */
+  images?: Array<{
+    url: string
+    alt?: string
+    width?: number
+    height?: number
+  }>
+  /** 内容摘要 */
+  summary?: string
+  /** 网页元数据 */
+  metadata?: {
+    author?: string
+    publishDate?: string
+    description?: string
+    keywords?: string[]
+  }
+  /** 读取状态 */
+  status: 'success' | 'partial' | 'failed'
+  /** 错误信息（如果读取失败） */
+  error?: string
+}
 
 /**
  * 工具调用详细信息

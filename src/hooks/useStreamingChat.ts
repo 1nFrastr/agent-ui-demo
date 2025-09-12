@@ -170,6 +170,48 @@ CREATE INDEX idx_user_status ON users(status);
     steps: [
       {
         type: 'tool_call' as const,
+        tool: 'web_search',
+        message: '搜索大冰《他们最幸福》相关信息...'
+      },
+      {
+        type: 'text' as const,
+        content: `# 网页搜索结果 🔍
+
+我找到了关于大冰《他们最幸福》的相关信息：`
+      },
+      {
+        type: 'tool_call' as const,
+        tool: 'web_content',
+        message: '读取豆瓣读书页面内容...'
+      },
+      {
+        type: 'text' as const,
+        content: `# 内容读取完成 📖
+
+## 作品简介
+
+《他们最幸福》是大冰2013年出版的代表作品，记录了十几个真实的传奇故事。这些故事的主人公大多是平凡人，但他们都在以自己的方式诠释着什么是真正的幸福和自由。
+
+## 主要特色
+
+- **真实性强**：每个故事都来源于作者的真实经历和见闻
+- **情感真挚**：用温暖的文字记录平凡人的不平凡故事
+- **价值观独特**：倡导追求内心真正想要的生活方式
+
+## 文学价值
+
+这部作品以其独特的叙述风格和深刻的人生感悟，触动了无数读者的心。大冰用他的文字告诉我们，幸福其实很简单，就在于做自己真正喜欢的事情。
+
+通过网页搜索和内容读取，我们可以快速获取和整理各种网络资源！ ✨`
+      }
+    ]
+  },
+
+  {
+    type: 'with_tools' as const,
+    steps: [
+      {
+        type: 'tool_call' as const,
         tool: 'ui_designer',
         message: '设计用户界面布局...'
       },
@@ -288,6 +330,32 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
 
   const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9)
 
+  // 根据工具类型获取合适的结果描述
+  const getToolResult = (toolName: string): string | undefined => {
+    switch (toolName) {
+      case 'web_search':
+        return '找到3个相关结果'
+      case 'web_content':
+        return '成功读取页面内容'
+      case 'code_generator':
+        return '代码生成完成'
+      case 'project_analyzer':
+        return '项目分析完成'
+      case 'performance_checker':
+        return '性能检查完成'
+      case 'api_designer':
+        return 'API设计完成'
+      case 'database_optimizer':
+        return '数据库优化完成'
+      case 'ui_designer':
+        return 'UI设计完成'
+      case 'component_generator':
+        return '组件生成完成'
+      default:
+        return undefined // 其他工具不显示结果
+    }
+  }
+
   const stopStreaming = useCallback(() => {
     if (streamingTimeoutRef.current) {
       clearTimeout(streamingTimeoutRef.current)
@@ -348,13 +416,21 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
     streamingTimeoutRef.current = setTimeout(streamContent, streamDelay)
   }, [streamDelay, chunkSize])
 
-  const simulateAIResponse = useCallback((_userMessage: string) => {
-    console.log('simulateAIResponse called with:', _userMessage)
+  const simulateAIResponse = useCallback((userMessage: string) => {
+    console.log('simulateAIResponse called with:', userMessage)
     setIsLoading(true)
     
-    // 随机选择一个AI回复
-    const responseIndex = Math.floor(Math.random() * AI_RESPONSES.length)
-    const selectedResponse = AI_RESPONSES[responseIndex]
+    // 检查是否为test关键词，如果是则使用网络搜索和读取工具的示例
+    let selectedResponse
+    if (userMessage.toLowerCase().includes('test')) {
+      // 使用包含web_search和web_content的示例（索引为3，即新添加的示例）
+      selectedResponse = AI_RESPONSES[3]
+    } else {
+      // 随机选择其他AI回复
+      const availableResponses = AI_RESPONSES.slice(0, 3) // 排除test专用的示例
+      const responseIndex = Math.floor(Math.random() * availableResponses.length)
+      selectedResponse = availableResponses[responseIndex]
+    }
     
     // 包含工具调用的回复
     let stepIndex = 0
@@ -370,6 +446,129 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
       if (step.type === 'tool_call') {
         // 创建工具调用消息
         const toolMessageId = generateId()
+        
+        // 根据工具类型设置适当的类型和元数据
+        let toolType: 'web_search' | 'web_content' | 'code_generation' | 'analysis' | 'api_request' | 'other' = 'other'
+        let toolMetadata: Record<string, unknown> = {}
+        let toolParameters: Record<string, unknown> = {}
+        
+        // 根据工具名称设置类型和参数
+        switch (step.tool) {
+          case 'web_search':
+            toolType = 'web_search'
+            toolParameters = { query: '大冰 他们最幸福' }
+            toolMetadata = {
+              searchData: {
+                query: '大冰 他们最幸福',
+                results: [
+                  {
+                    title: '他们最幸福-大冰-电子书-在线阅读-网易云阅读',
+                    url: 'https://yuedu.163.com/source/8d4ad3d0f7d6409bad45a3a6e90de2f4_4',
+                    summary: '《他们最幸福》是大冰2013年出版的代表作品，书中记录了十几个真实的传奇故事。这些故事的主人公大多是平凡人，有流浪歌手、酒吧老板、小镇青年、北漂艺术家...',
+                    favicon: 'https://yuedu.163.com/favicon.ico',
+                    domain: 'yuedu.163.com'
+                  },
+                  {
+                    title: '他们最幸福 (豆瓣)',
+                    url: 'https://book.douban.com/subject/25723870/',
+                    summary: '大冰 / 2013-09 / 湖南文艺出版社 / 32.00元。十几个故事，十几种善意的人生。每个人都在以自己的方式诠释着什么是真正的幸福和自由。愿你我都能像他们一样，勇敢做自己。',
+                    favicon: 'https://img1.doubanio.com/favicon.ico',
+                    domain: 'book.douban.com'
+                  },
+                  {
+                    title: '大冰《他们最幸福》经典语录_句子迷',
+                    url: 'https://www.juzimi.com/writer/dabing',
+                    summary: '大冰《他们最幸福》经典语录：1、愿你我都有能力爱自己，有余力爱别人。2、请相信，这个世界上真的有人在过着你想要的生活。忽晴忽雨的江湖，祝你有梦为马，随处可栖。',
+                    favicon: 'https://www.juzimi.com/favicon.ico',
+                    domain: 'juzimi.com'
+                  }
+                ],
+                searchTime: 890,
+                totalResults: 1280000
+              }
+            }
+            break
+          case 'web_content':
+            toolType = 'web_content'
+            toolParameters = { url: 'https://book.douban.com/subject/25723870/' }
+            toolMetadata = {
+              contentData: {
+                url: 'https://book.douban.com/subject/25723870/',
+                title: '他们最幸福 (豆瓣)',
+                content: `<div class="content">
+                  <h1>他们最幸福</h1>
+                  <div class="info">
+                    <span>作者: 大冰</span>
+                    <span>出版社: 湖南文艺出版社</span>
+                    <span>出版年: 2013-9</span>
+                    <span>定价: 32.00元</span>
+                  </div>
+                  <h2>内容简介</h2>
+                  <p>十几个故事，十几种善意的人生。每个人都在以自己的方式诠释着什么是真正的幸福和自由。</p>
+                  <p>有流浪歌手、有酒吧老板、有小镇青年、有北漂艺术家......他们中的每一个都曾经历过迷茫，但最终都找到了属于自己的生活方式。</p>
+                  <h2>作者简介</h2>
+                  <p>大冰，原名焦冰，山东烟台人。曾任职于山东卫视、凤凰卫视。现为高原酒吧掌柜、民谣歌手、背包客。</p>
+                  <h2>经典语录</h2>
+                  <ul>
+                    <li>愿你我都有能力爱自己，有余力爱别人。</li>
+                    <li>请相信，这个世界上真的有人在过着你想要的生活。</li>
+                    <li>忽晴忽雨的江湖，祝你有梦为马，随处可栖。</li>
+                  </ul>
+                  <h2>读者评价</h2>
+                  <p>这本书让我重新思考什么是真正的幸福。每个故事都很真实，很温暖，读完之后内心充满了力量。</p>
+                </div>`,
+                images: [
+                  {
+                    url: 'https://img1.doubanio.com/view/subject/l/public/s27237850.jpg',
+                    alt: '他们最幸福书籍封面',
+                    width: 300,
+                    height: 400
+                  }
+                ],
+                summary: '这是一部记录真实人生故事的作品，作者大冰用温暖的文字讲述了十几个平凡人的不平凡故事，每个故事都在诠释着什么是真正的幸福和自由。',
+                metadata: {
+                  author: '大冰',
+                  publishDate: '2013-09-01',
+                  description: '十几个故事，十几种善意的人生。愿你我都能像他们一样，勇敢做自己。',
+                  keywords: ['大冰', '他们最幸福', '生活哲学', '人生感悟', '真实故事']
+                },
+                status: 'success' as const
+              }
+            }
+            break
+          case 'code_generator':
+            toolType = 'code_generation'
+            toolParameters = { language: 'typescript', type: 'component' }
+            break
+          case 'project_analyzer':
+            toolType = 'analysis'
+            toolParameters = { target: 'project_structure' }
+            break
+          case 'performance_checker':
+            toolType = 'analysis'
+            toolParameters = { type: 'performance' }
+            break
+          case 'api_designer':
+            toolType = 'api_request'
+            toolParameters = { type: 'design' }
+            break
+          case 'database_optimizer':
+            toolType = 'analysis'
+            toolParameters = { target: 'database' }
+            break
+          case 'ui_designer':
+            toolType = 'other'
+            toolParameters = { type: 'ui_design' }
+            break
+          case 'component_generator':
+            toolType = 'code_generation'
+            toolParameters = { language: 'typescript', type: 'component' }
+            break
+          default:
+            toolType = 'other'
+            toolParameters = {}
+        }
+        
         const toolMessage: Message = {
           id: toolMessageId,
           sender: 'assistant',
@@ -378,8 +577,10 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
             tool_call: {
               id: generateId(),
               name: step.tool,
-              type: 'other',
-              status: 'running'
+              type: toolType,
+              status: 'running',
+              parameters: toolParameters,
+              metadata: toolMetadata
             }
           },
           timestamp: new Date(),
@@ -390,6 +591,7 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
         
         // 模拟工具调用完成
         setTimeout(() => {
+          const toolResult = getToolResult(step.tool)
           setMessages(prev => 
             prev.map(msg => 
               msg.id === toolMessageId 
@@ -399,8 +601,13 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
                       tool_call: {
                         id: generateId(),
                         name: step.tool,
-                        type: 'other',
-                        status: 'success'
+                        type: toolType,
+                        status: 'success',
+                        parameters: toolParameters,
+                        ...(toolResult ? { result: toolResult } : {}),
+                        metadata: toolMetadata,
+                        duration: 1200 + Math.floor(Math.random() * 800),
+                        startTime: new Date(Date.now() - 1500)
                       }
                     }
                   }
