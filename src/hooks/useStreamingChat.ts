@@ -376,7 +376,9 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
           type: 'tool_call',
           content: { 
             tool_call: {
+              id: generateId(),
               name: step.tool,
+              type: 'other',
               status: 'running'
             }
           },
@@ -395,7 +397,9 @@ export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStre
                     ...msg, 
                     content: { 
                       tool_call: {
+                        id: generateId(),
                         name: step.tool,
+                        type: 'other',
                         status: 'success'
                       }
                     }

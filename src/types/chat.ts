@@ -19,6 +19,50 @@ export type MessageType = 'text' | 'code' | 'image' | 'file' | 'system' | 'tool_
 export type ToolCallStatus = 'running' | 'success' | 'error'
 
 /**
+ * 工具调用类型
+ */
+export type ToolCallType = 
+  | 'file_operation'      // 文件操作
+  | 'terminal_command'    // 终端命令
+  | 'code_generation'     // 代码生成
+  | 'api_request'         // API请求
+  | 'search'              // 搜索
+  | 'analysis'            // 分析
+  | 'other'               // 其他
+
+/**
+ * 工具调用详细信息
+ */
+export interface ToolCallDetails {
+  /** 工具调用ID */
+  id: string
+  /** 工具名称 */
+  name: string
+  /** 工具类型 */
+  type: ToolCallType
+  /** 工具状态 */
+  status: ToolCallStatus
+  /** 调用参数 */
+  parameters?: Record<string, unknown>
+  /** 执行结果 */
+  result?: string
+  /** 错误信息 */
+  error?: string
+  /** 执行时间 */
+  duration?: number
+  /** 开始时间 */
+  startTime?: Date
+  /** 结束时间 */
+  endTime?: Date
+  /** 工具描述 */
+  description?: string
+  /** 工具图标 */
+  icon?: string
+  /** 额外元数据 */
+  metadata?: Record<string, unknown>
+}
+
+/**
  * 消息内容接口
  */
 export interface MessageContent {
@@ -44,12 +88,7 @@ export interface MessageContent {
     type: string
   }
   /** 工具调用信息 */
-  tool_call?: {
-    name: string
-    status: ToolCallStatus
-    parameters?: Record<string, unknown>
-    result?: string
-  }
+  tool_call?: ToolCallDetails
 }
 
 /**

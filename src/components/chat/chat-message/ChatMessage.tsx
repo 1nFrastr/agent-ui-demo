@@ -1,18 +1,20 @@
 import * as React from 'react'
 import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { Wrench, CheckCircle, XCircle, Loader2 } from 'lucide-react'
-import type { Message } from '@/types/chat'
+import { Wrench, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react'
+import type { Message, ToolCallDetails } from '@/types/chat'
 
 export interface ChatMessageProps {
   message: Message
   enableMarkdown?: boolean
   theme?: 'light' | 'dark'
+  onToolDetailsClick?: (toolDetails: ToolCallDetails) => void
   className?: string
 }
 
 export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessageProps>(
-  ({ message, enableMarkdown = true, theme = 'light', className }, ref) => {
+  ({ message, enableMarkdown = true, theme = 'light', onToolDetailsClick, className }, ref) => {
     const isUser = message.sender === 'user'
     const isSystem = message.sender === 'system'
 
@@ -90,12 +92,25 @@ export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessa
                     <XCircle className="h-4 w-4 text-red-600" />
                   )}
                   <Wrench className="h-4 w-4 text-blue-600" />
-                  <span className=" font-medium text-blue-900 dark:text-blue-100">
+                  <span className="font-medium text-blue-900 dark:text-blue-100">
                     {message.content.tool_call.status === 'running' && `正在调用 ${message.content.tool_call.name}...`}
                     {message.content.tool_call.status === 'success' && `已完成 ${message.content.tool_call.name}`}
                     {message.content.tool_call.status === 'error' && `调用 ${message.content.tool_call.name} 失败`}
                   </span>
                 </div>
+                
+                {/* 查看详情按钮 */}
+                {onToolDetailsClick && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onToolDetailsClick(message.content.tool_call!)}
+                    className="h-8 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-800/20"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    查看详情
+                  </Button>
+                )}
               </div>
             )}
           </div>

@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
-import { ChatInterface } from '@/components/chat/chat-interface'
+import { ChatLayout } from '@/components/chat/chat-layout'
+import { ChatWithToolDetailsDemo } from '@/components/chat/ChatWithToolDetailsDemo'
+import { LayoutDemo } from '@/components/chat/LayoutDemo'
 import { useStreamingChat } from '@/hooks'
-import { Send, MessageCircle, Sparkles } from 'lucide-react'
+import { Send, MessageCircle, Sparkles, Wrench, Layout } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 function App() {
   const [count, setCount] = useState(0)
   const [showChat, setShowChat] = useState(false)
+  const [showToolDemo, setShowToolDemo] = useState(false)
+  const [showLayoutDemo, setShowLayoutDemo] = useState(false)
   
   // 使用流式聊天Hook
   const {
@@ -66,11 +70,18 @@ export const useCounter = (initialValue: number = 0) => {
     }
   ]
 
+  if (showLayoutDemo) {
+    return <LayoutDemo />
+  }
+
+  if (showToolDemo) {
+    return <ChatWithToolDetailsDemo />
+  }
+
   if (showChat) {
     return (
       <div className="h-screen">
-        <ChatInterface
-          className='max-w-4xl mx-auto'
+        <ChatLayout
           messages={messages}
           isLoading={isLoading}
           onSendMessage={sendMessage}
@@ -140,17 +151,35 @@ export const useCounter = (initialValue: number = 0) => {
         {/* 流式对话演示入口 */}
         <div className="mb-8">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">🚀 流式对话演示</h2>
+            <h2 className="text-2xl font-bold mb-2">🚀 对话功能演示</h2>
             <p className="text-muted-foreground">体验实时AI对话，支持Markdown渲染和代码高亮</p>
           </div>
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-4">
             <Button 
               size="lg" 
               onClick={() => setShowChat(true)}
               className="px-8 py-4 text-lg"
             >
               <MessageCircle className="mr-3 h-6 w-6" />
-              开始流式对话
+              基础对话演示
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => setShowToolDemo(true)}
+              className="px-8 py-4 text-lg"
+            >
+              <Wrench className="mr-3 h-6 w-6" />
+              工具调用演示
+            </Button>
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={() => setShowLayoutDemo(true)}
+              className="px-8 py-4 text-lg"
+            >
+              <Layout className="mr-3 h-6 w-6" />
+              布局演示
             </Button>
           </div>
         </div>

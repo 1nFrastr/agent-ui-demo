@@ -4,7 +4,7 @@ import { MessageInput } from '@/components/chat/message-input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { MessageCircle, MoreVertical, Trash2 } from 'lucide-react'
-import type { Message } from '@/types/chat'
+import type { Message, ToolCallDetails } from '@/types/chat'
 
 export interface ChatInterfaceProps {
   /** 消息列表 */
@@ -23,6 +23,8 @@ export interface ChatInterfaceProps {
   onStop?: () => void
   /** 清空对话回调 */
   onClearChat?: () => void
+  /** 工具详情点击回调 */
+  onToolDetailsClick?: (toolDetails: ToolCallDetails) => void
   /** 自定义类名 */
   className?: string
 }
@@ -38,6 +40,7 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
       onSendMessage,
       onStop,
       onClearChat,
+      onToolDetailsClick,
       className,
     },
     ref
@@ -60,11 +63,15 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
       setInputValue('')
     }
 
+    const handleToolDetailsClick = (toolDetails: ToolCallDetails) => {
+      onToolDetailsClick?.(toolDetails)
+    }
+
     return (
       <div
         ref={ref}
         className={cn(
-          'flex flex-col h-full max-h-screen bg-background',
+          'flex flex-col h-full bg-background',
           className
         )}
       >
@@ -134,6 +141,7 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
                       message={message}
                       enableMarkdown={enableMarkdown}
                       theme={theme}
+                      onToolDetailsClick={handleToolDetailsClick}
                     />
                   </div>
                 )
