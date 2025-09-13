@@ -29,40 +29,36 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({
   onClose,
   className,
 }) => {
-  // 检查是否是AI编程场景（包含file_browser工具调用）
-  const isAIProgrammingScenario = React.useMemo(() => {
-    return messages.some(message => 
-      message.type === 'tool_call' && 
-      message.content.tool_call?.name === 'file_browser'
-    )
-  }, [messages])
+  // 获取当前选中的工具消息
+  const selectedToolMessage = React.useMemo(() => {
+    if (!selectedToolMessageId) return null
+    return messages.find(message => message.id === selectedToolMessageId) || null
+  }, [messages, selectedToolMessageId])
 
-  // 获取文件浏览器工具的文件系统数据
+  // 检查选中的消息是否是AI编程场景（file_browser工具调用）
+  const isSelectedMessageAICoder = React.useMemo(() => {
+    return selectedToolMessage?.type === 'tool_call' && 
+           selectedToolMessage.content.tool_call?.name === 'file_browser'
+  }, [selectedToolMessage])
+
+  // 获取文件浏览器工具的文件系统数据（仅当选中的消息是file_browser时）
   const fileSystemData = React.useMemo((): SimpleFileSystem | undefined => {
-    if (!isAIProgrammingScenario) return undefined
+    if (!isSelectedMessageAICoder || !selectedToolMessage) return undefined
     
-    // 查找最新的file_browser工具调用消息
-    const fileBrowserMessage = messages
-      .filter(message => 
-        message.type === 'tool_call' && 
-        message.content.tool_call?.name === 'file_browser'
-      )
-      .pop() // 获取最后一个
-
-    const toolCall = fileBrowserMessage?.content.tool_call
+    const toolCall = selectedToolMessage.content.tool_call
     const fileSystemMetadata = toolCall?.metadata?.fileSystemData as SimpleFileSystem | undefined
     
     return fileSystemMetadata
-  }, [messages, isAIProgrammingScenario])
+  }, [selectedToolMessage, isSelectedMessageAICoder])
 
   const handleFilesChange = (newFiles: SimpleFileSystem) => {
     // 在实际应用中，这里可以将文件更改同步到后端或状态管理器
     console.log('Files changed:', newFiles)
   }
 
-  // 根据场景决定显示哪种面板
-  if (isAIProgrammingScenario && fileSystemData) {
-    // AI编程场景：显示文件浏览器和预览器
+  // 根据选中的消息类型决定显示哪种面板
+  if (isSelectedMessageAICoder && fileSystemData) {
+    // AI编程场景：显示文件浏览器和预览器（仅当用户点击了file_browser工具调用时）
     return (
       <div className={cn(
         'ease-in-out border-l border-border',
