@@ -73,6 +73,7 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
     }, [])
 
     // 缓存消息列表渲染，避免因为输入框状态变化导致重新渲染
+    // TODO: 对比学习useMemo和外层react.memo的区别
     const messageList = React.useMemo(() => {
       return messages.map((message, index) => {
         const isUser = message.sender === 'user'
