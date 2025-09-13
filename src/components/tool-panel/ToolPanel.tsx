@@ -78,17 +78,57 @@ export const ToolPanel: React.FC<ToolPanelProps> = ({
       }
       return null
     }
+
+    // 查找所有相关文件
+    const findAllFiles = () => {
+      const result: { htmlContent?: string; cssContent?: string; jsContent?: string } = {}
+      
+      for (const file of files.files) {
+        if (file.type === 'file') {
+          const extension = file.extension?.toLowerCase()
+          const content = file.content || ''
+          
+          switch (extension) {
+            case 'html': {
+              // 如果HTML文件包含外部引用，清理它们，因为我们会直接嵌入CSS和JS
+              const cleanHtmlContent = content
+                .replace(/<link[^>]*rel\s*=\s*["']stylesheet["'][^>]*>/gi, '')
+                .replace(/<script[^>]*src\s*=\s*["'][^"']*["'][^>]*><\/script>/gi, '')
+              
+              result.htmlContent = cleanHtmlContent
+              break
+            }
+            case 'css':
+              result.cssContent = content
+              break
+            case 'js':
+            case 'javascript':
+              result.jsContent = content
+              break
+          }
+        }
+      }
+      return result
+    }
     
     const selectedFile = findFile(files.files, files.selectedPath)
     if (!selectedFile || selectedFile.type !== 'file') return {}
     
     const extension = selectedFile.extension?.toLowerCase()
-    const content = selectedFile.content || ''
     
-    // 根据文件类型分配内容
+    // 检查文件系统中是否有HTML文件
+    const hasHtmlFile = files.files.some(file => 
+      file.type === 'file' && file.extension?.toLowerCase() === 'html'
+    )
+    
+    // 如果有HTML文件，总是组合所有相关文件（无论当前选中什么文件）
+    if (hasHtmlFile) {
+      return findAllFiles()
+    }
+    
+    // 如果没有HTML文件，根据选中文件类型返回内容
+    const content = selectedFile.content || ''
     switch (extension) {
-      case 'html':
-        return { htmlContent: content }
       case 'css':
         return { cssContent: content }
       case 'js':

@@ -15,6 +15,7 @@ export const sampleFileSystem: SimpleFileSystem = {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>示例页面</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -23,6 +24,7 @@ export const sampleFileSystem: SimpleFileSystem = {
         <button id="clickBtn">点击我</button>
         <div id="output"></div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>`,
       modified: new Date('2024-01-15T10:30:00'),
@@ -83,27 +85,27 @@ button:hover {
       path: '/script.js',
       type: 'file',
       extension: 'js',
-      content: `// 页面加载完成后执行
-document.addEventListener('DOMContentLoaded', function() {
-    const button = document.getElementById('clickBtn');
-    const output = document.getElementById('output');
-    
-    if (button && output) {
-        button.addEventListener('click', function() {
-            const now = new Date();
-            output.innerHTML = \`
-                <h3>按钮被点击了！</h3>
-                <p>当前时间: \${now.toLocaleString()}</p>
-                <p>这是由JavaScript动态生成的内容。</p>
-            \`;
-            
-            console.log('按钮点击事件触发', now);
-        });
+      content: `// 获取页面元素
+const button = document.getElementById('clickBtn');
+const output = document.getElementById('output');
+
+// 显示初始消息
+if (output) {
+    output.innerHTML = '<p>页面已加载完成，点击上方按钮查看效果。</p>';
+}
+
+// 设置按钮点击事件
+if (button && output) {
+    button.addEventListener('click', function() {
+        const now = new Date();
+        output.innerHTML = 
+            '<h3>按钮被点击了！</h3>' +
+            '<p>当前时间: ' + now.toLocaleString() + '</p>' +
+            '<p>这是由JavaScript动态生成的内容。</p>';
         
-        // 显示初始消息
-        output.innerHTML = '<p>页面已加载完成，点击上方按钮查看效果。</p>';
-    }
-});
+        console.log('按钮点击事件触发', now);
+    });
+}
 
 // 添加一些示例功能
 function generateRandomColor() {

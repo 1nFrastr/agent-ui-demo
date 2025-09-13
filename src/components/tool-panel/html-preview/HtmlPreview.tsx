@@ -18,12 +18,25 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({
 
   // 生成完整的HTML文档
   const generateCompleteHtml = () => {
-    // 如果有独立的HTML内容，优先使用
-    if (htmlContent.trim() && htmlContent.toLowerCase().includes('<!doctype') || htmlContent.toLowerCase().includes('<html')) {
+    // 始终组合HTML、CSS、JS内容，除非HTML内容已经是完整的文档且没有额外的CSS/JS
+    const isCompleteDocument = htmlContent.trim() && 
+      (htmlContent.toLowerCase().includes('<!doctype') || htmlContent.toLowerCase().includes('<html'))
+    
+    // 如果HTML是完整文档且没有额外的CSS/JS内容，直接使用
+    if (isCompleteDocument && !cssContent.trim() && !jsContent.trim()) {
       return htmlContent
     }
 
-    // 否则组合HTML、CSS、JS内容
+    // 提取HTML body内容（如果有完整文档结构）
+    let bodyContent = htmlContent
+    if (isCompleteDocument) {
+      const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+      if (bodyMatch) {
+        bodyContent = bodyMatch[1]
+      }
+    }
+
+    // 组合HTML、CSS、JS内容
     return `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -51,7 +64,7 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({
     </style>
 </head>
 <body>
-    ${htmlContent || '<p>没有HTML内容可显示</p>'}
+    ${bodyContent || '<p>没有HTML内容可显示</p>'}
     
     <script>
         // 错误处理
@@ -90,12 +103,14 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({
             }
         };
         
-        // 用户JavaScript
-        try {
-            ${jsContent || ''}
-        } catch (error) {
-            console.error('用户代码执行错误:', error);
-        }
+        // 用户JavaScript - 使用setTimeout确保DOM完全准备好
+        setTimeout(function() {
+            try {
+                ${jsContent || ''}
+            } catch (error) {
+                console.error('用户代码执行错误:', error);
+            }
+        }, 0);
     </script>
 </body>
 </html>
@@ -113,27 +128,24 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({
       const html = generateCompleteHtml()
       const iframe = iframeRef.current
       
-      // 清空iframe
-      iframe.src = 'about:blank'
+      // 使用srcdoc属性更可靠
+      iframe.srcdoc = html
       
-      // 等待iframe加载完成后再写入内容
+      // 监听iframe加载完成
+      const handleLoad = () => {
+        setLastUpdate(new Date())
+        setIsLoading(false)
+        iframe.removeEventListener('load', handleLoad)
+      }
+      
+      iframe.addEventListener('load', handleLoad)
+      
+      // 备用超时处理
       setTimeout(() => {
-        try {
-          const doc = iframe.contentDocument || iframe.contentWindow?.document
-          if (doc) {
-            doc.open()
-            doc.write(html)
-            doc.close()
-            setLastUpdate(new Date())
-          }
-        } catch (err) {
-          console.error('Preview update error:', err)
-          setError(err instanceof Error ? err.message : '预览更新失败')
-          onError?.(err instanceof Error ? err : new Error('Preview update failed'))
-        } finally {
+        if (isLoading) {
           setIsLoading(false)
         }
-      }, 100)
+      }, 1000)
       
     } catch (err) {
       console.error('Preview generation error:', err)
