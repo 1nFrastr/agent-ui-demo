@@ -6,11 +6,11 @@ import { useStreamingChat } from '@/hooks'
 import { Send, MessageCircle, Sparkles, Code2 } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
-// 真正的ToolPanel组件
-import { ToolPanel } from './components/tool-panel/ToolPanel'
-import { sampleFileSystem } from './components/tool-panel/sampleData'
+// 真正的AICoderPanel组件
+import { AICoderPanel } from './components/chat/ai-coder-panel/AICoderPanel'
+import { sampleFileSystem } from './components/chat/ai-coder-panel/sampleData'
 
-// ToolPanel演示组件
+// AICoderPanel演示组件
 const ToolPanelDemo = () => {
   return (
     <div className="h-screen p-4">
@@ -19,7 +19,7 @@ const ToolPanelDemo = () => {
         <p className="text-gray-600">文件浏览器 + HTML预览功能</p>
       </div>
       <div className="h-5/6">
-        <ToolPanel 
+        <AICoderPanel 
           files={sampleFileSystem}
           defaultTab="files"
           readOnly={false}

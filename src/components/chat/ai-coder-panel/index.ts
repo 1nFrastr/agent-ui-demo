@@ -1,4 +1,4 @@
-export { ToolPanel } from './ToolPanel'
+export { AICoderPanel } from './AICoderPanel'
 export * from './types'
 export { FileBrowser } from './file-browser/FileBrowser'
 export { HtmlPreview } from './html-preview/HtmlPreview'

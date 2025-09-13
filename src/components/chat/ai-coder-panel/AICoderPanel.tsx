@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { cn } from '@/utils'
-import type { ToolPanelProps, TabType, SimpleFileSystem, SimpleFile } from './types'
+import type { AICoderPanelProps, TabType, SimpleFileSystem, SimpleFile } from './types'
 import { FileBrowser } from './file-browser/FileBrowser'
 import { HtmlPreview } from './html-preview/HtmlPreview'
 import { Files, Eye } from 'lucide-react'
 
-export const ToolPanel: React.FC<ToolPanelProps> = ({
+export const AICoderPanel: React.FC<AICoderPanelProps> = ({
   className,
   defaultTab = 'files',
   files: initialFiles,

@@ -32,7 +32,7 @@ export interface SimplePreviewState {
 
 export type TabType = 'files' | 'preview'
 
-export interface ToolPanelProps {
+export interface AICoderPanelProps {
   // 基础配置
   className?: string
   defaultTab?: TabType

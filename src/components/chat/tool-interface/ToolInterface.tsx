@@ -1,9 +1,9 @@
 import * as React from 'react'
 import { ToolDetailsPanel } from '@/components/chat/tool-details-panel'
-import { AIProgrammingPanel } from '@/components/chat/ai-programming-panel'
+import { AICoderPanel } from '@/components/chat/ai-coder-panel'
 import { cn } from '@/utils/cn'
 import type { Message } from '@/types/chat'
-import type { SimpleFileSystem } from '@/components/tool-panel/types'
+import type { SimpleFileSystem } from '@/components/chat/ai-coder-panel/types'
 
 export interface ToolInterfaceProps {
   /** 消息列表 */
@@ -72,7 +72,7 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({
         className
       )}>
         {isOpen && (
-          <AIProgrammingPanel
+          <AICoderPanel
             files={fileSystemData}
             onFilesChange={handleFilesChange}
             className="h-full"
