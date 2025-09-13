@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { cn } from '@/utils'
 import type { ToolPanelProps, TabType, SimpleFileSystem, SimpleFile } from './types'
@@ -64,83 +64,97 @@ export const ToolPanel: React.FC<ToolPanelProps> = ({
     }
   }
 
-  // 获取当前选中文件的内容用于预览
-  const getPreviewContent = () => {
-    if (!files.selectedPath) return {}
+  // 获取所有文件内容（纯函数）
+  // TODO: 优化点
+  // 1. 当前只遍历一级目录，不处理嵌套文件夹（file.children）
+  // 2. 相同后缀的多个文件会互相覆盖，只保留最后一个
+  // 3. 应该考虑递归遍历和多文件合并策略
+  const getAllFileContents = useCallback(() => {
+    const result: { htmlContent?: string; cssContent?: string; jsContent?: string } = {}
     
-    const findFile = (fileList: typeof files.files, targetPath: string): SimpleFile | null => {
-      for (const file of fileList) {
-        if (file.path === targetPath) return file
-        if (file.children) {
-          const found = findFile(file.children, targetPath)
-          if (found) return found
+    for (const file of files.files) {
+      if (file.type === 'file') {
+        const extension = file.extension?.toLowerCase()
+        const content = file.content || ''
+        
+        switch (extension) {
+          case 'html':
+            result.htmlContent = content // TODO: 多个HTML文件会覆盖
+            break
+          case 'css':
+            result.cssContent = content // TODO: 多个CSS文件会覆盖
+            break
+          case 'js':
+          case 'javascript':
+            result.jsContent = content // TODO: 多个JS文件会覆盖
+            break
         }
       }
-      return null
     }
+    return result
+  }, [files.files])
 
-    // 查找所有相关文件
-    const findAllFiles = () => {
-      const result: { htmlContent?: string; cssContent?: string; jsContent?: string } = {}
+  // 清理HTML中的本地文件引用（纯函数）
+  const cleanLocalReferences = useCallback((htmlContent: string) => {
+    return htmlContent
+      .replace(/<link[^>]*rel\s*=\s*["']stylesheet["'][^>]*href\s*=\s*["'](?!https?:\/\/)[^"']*["'][^>]*>/gi, '')
+      .replace(/<script[^>]*src\s*=\s*["'](?!https?:\/\/)[^"']*["'][^>]*><\/script>/gi, '')
+  }, [])
+
+  // 使用 useMemo 优化预览内容计算，只在依赖变化时重新计算
+  const previewContent = useMemo(() => {
+    const buildPreviewContent = () => {
+      if (!files.selectedPath) return {}
       
-      for (const file of files.files) {
-        if (file.type === 'file') {
-          const extension = file.extension?.toLowerCase()
-          const content = file.content || ''
-          
-          switch (extension) {
-            case 'html': {
-              // 如果HTML文件包含外部引用，清理它们，因为我们会直接嵌入CSS和JS
-              const cleanHtmlContent = content
-                .replace(/<link[^>]*rel\s*=\s*["']stylesheet["'][^>]*>/gi, '')
-                .replace(/<script[^>]*src\s*=\s*["'][^"']*["'][^>]*><\/script>/gi, '')
-              
-              result.htmlContent = cleanHtmlContent
-              break
-            }
-            case 'css':
-              result.cssContent = content
-              break
-            case 'js':
-            case 'javascript':
-              result.jsContent = content
-              break
+      const findFile = (fileList: typeof files.files, targetPath: string): SimpleFile | null => {
+        for (const file of fileList) {
+          if (file.path === targetPath) return file
+          if (file.children) {
+            const found = findFile(file.children, targetPath)
+            if (found) return found
           }
         }
+        return null
       }
-      return result
-    }
-    
-    const selectedFile = findFile(files.files, files.selectedPath)
-    if (!selectedFile || selectedFile.type !== 'file') return {}
-    
-    const extension = selectedFile.extension?.toLowerCase()
-    
-    // 检查文件系统中是否有HTML文件
-    const hasHtmlFile = files.files.some(file => 
-      file.type === 'file' && file.extension?.toLowerCase() === 'html'
-    )
-    
-    // 如果有HTML文件，总是组合所有相关文件（无论当前选中什么文件）
-    if (hasHtmlFile) {
-      return findAllFiles()
-    }
-    
-    // 如果没有HTML文件，根据选中文件类型返回内容
-    const content = selectedFile.content || ''
-    switch (extension) {
-      case 'css':
-        return { cssContent: content }
-      case 'js':
-      case 'javascript':
-        return { jsContent: content }
-      default:
-        // 如果是其他类型，尝试作为HTML显示
-        return { htmlContent: content }
-    }
-  }
 
-  const previewContent = getPreviewContent()
+      const selectedFile = findFile(files.files, files.selectedPath)
+      if (!selectedFile || selectedFile.type !== 'file') return {}
+      
+      const extension = selectedFile.extension?.toLowerCase()
+      
+      // 检查文件系统中是否有HTML文件
+      const hasHtmlFile = files.files.some(file => 
+        file.type === 'file' && file.extension?.toLowerCase() === 'html'
+      )
+      
+      // 如果有HTML文件，总是组合所有相关文件（无论当前选中什么文件）
+      if (hasHtmlFile) {
+        const allContents = getAllFileContents()
+        
+        // 如果有HTML内容，清理本地文件引用
+        if (allContents.htmlContent) {
+          allContents.htmlContent = cleanLocalReferences(allContents.htmlContent)
+        }
+        
+        return allContents
+      }
+      
+      // 如果没有HTML文件，根据选中文件类型返回内容
+      const content = selectedFile.content || ''
+      switch (extension) {
+        case 'css':
+          return { cssContent: content }
+        case 'js':
+        case 'javascript':
+          return { jsContent: content }
+        default:
+          // 如果是其他类型，尝试作为HTML显示
+          return { htmlContent: content }
+      }
+    }
+
+    return buildPreviewContent()
+  }, [files, getAllFileContents, cleanLocalReferences])
 
   return (
     <div className={cn('w-full h-full flex flex-col', className)}>
