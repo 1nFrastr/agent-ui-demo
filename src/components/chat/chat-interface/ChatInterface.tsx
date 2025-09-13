@@ -58,14 +58,50 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
       scrollToBottom()
     }, [messages, scrollToBottom])
 
-    const handleSendMessage = (message: string) => {
+    // 使用 useCallback 缓存事件处理器，避免每次渲染时重新创建
+    const handleSendMessage = React.useCallback((message: string) => {
       onSendMessage?.(message)
       setInputValue('')
-    }
+    }, [onSendMessage])
 
-    const handleToolDetailsClick = (messageId: string) => {
+    const handleToolDetailsClick = React.useCallback((messageId: string) => {
       onToolDetailsClick?.(messageId)
-    }
+    }, [onToolDetailsClick])
+
+    const handleInputChange = React.useCallback((value: string) => {
+      setInputValue(value)
+    }, [])
+
+    // 缓存消息列表渲染，避免因为输入框状态变化导致重新渲染
+    const messageList = React.useMemo(() => {
+      return messages.map((message, index) => {
+        const isUser = message.sender === 'user'
+        const prevMessage = index > 0 ? messages[index - 1] : null
+        const isConsecutiveAssistant = 
+          !isUser && 
+          prevMessage && 
+          prevMessage.sender === 'assistant'
+        
+        return (
+          <div 
+            key={message.id}
+            className={cn(
+              // 用户消息保持正常间距
+              isUser ? 'mb-4' : 
+              // AI连续消息间距很小，看起来像同一条消息
+              isConsecutiveAssistant ? 'mb-1' : 'mb-3'
+            )}
+          >
+            <ChatMessage
+              message={message}
+              enableMarkdown={enableMarkdown}
+              theme={theme}
+              onToolDetailsClick={handleToolDetailsClick}
+            />
+          </div>
+        )
+      })
+    }, [messages, enableMarkdown, theme, handleToolDetailsClick])
 
     return (
       <div
@@ -119,33 +155,7 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
             </div>
           ) : (
             <>
-              {messages.map((message, index) => {
-                const isUser = message.sender === 'user'
-                const prevMessage = index > 0 ? messages[index - 1] : null
-                const isConsecutiveAssistant = 
-                  !isUser && 
-                  prevMessage && 
-                  prevMessage.sender === 'assistant'
-                
-                return (
-                  <div 
-                    key={message.id}
-                    className={cn(
-                      // 用户消息保持正常间距
-                      isUser ? 'mb-4' : 
-                      // AI连续消息间距很小，看起来像同一条消息
-                      isConsecutiveAssistant ? 'mb-1' : 'mb-3'
-                    )}
-                  >
-                    <ChatMessage
-                      message={message}
-                      enableMarkdown={enableMarkdown}
-                      theme={theme}
-                      onToolDetailsClick={handleToolDetailsClick}
-                    />
-                  </div>
-                )
-              })}
+              {messageList}
               <div ref={messagesEndRef} />
             </>
           )}
@@ -154,7 +164,7 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
         {/* 消息输入框 */}
         <MessageInput
           value={inputValue}
-          onChange={setInputValue}
+          onChange={handleInputChange}
           placeholder={placeholder}
           isLoading={isLoading}
           onSend={handleSendMessage}
