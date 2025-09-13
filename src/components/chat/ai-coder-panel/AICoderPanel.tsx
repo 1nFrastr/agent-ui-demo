@@ -1,14 +1,17 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { cn } from '@/utils'
+import { Button } from '@/components/ui/button'
 import type { AICoderPanelProps, TabType, SimpleFileSystem, SimpleFile } from './types'
 import { FileBrowser } from './file-browser/FileBrowser'
 import { HtmlPreview } from './html-preview/HtmlPreview'
-import { Files, Eye } from 'lucide-react'
+import { Files, Eye, X, Code2 } from 'lucide-react'
 
 export const AICoderPanel: React.FC<AICoderPanelProps> = ({
   className,
   defaultTab = 'files',
+  title = 'AI编程助手',
+  onClose,
   files: initialFiles,
   readOnly = false,
   onFilesChange,
@@ -158,6 +161,19 @@ export const AICoderPanel: React.FC<AICoderPanelProps> = ({
 
   return (
     <div className={cn('w-full h-full flex flex-col', className)}>
+      {/* 标题栏 */}
+      <div className="flex items-center justify-between p-4 border-b border-border bg-background">
+        <div className="flex items-center gap-2">
+          <Code2 className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">{title}</h3>
+        </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       <Tabs.Root 
         value={activeTab} 
         onValueChange={(value) => setActiveTab(value as TabType)}

@@ -37,6 +37,10 @@ export interface AICoderPanelProps {
   className?: string
   defaultTab?: TabType
   
+  // 面板配置
+  title?: string
+  onClose?: () => void
+  
   // 文件系统配置
   files?: SimpleFileSystem
   readOnly?: boolean

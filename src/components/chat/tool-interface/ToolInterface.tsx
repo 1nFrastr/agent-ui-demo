@@ -71,6 +71,7 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({
           <AICoderPanel
             files={fileSystemData}
             onFilesChange={handleFilesChange}
+            onClose={onClose}
             className="h-full"
           />
         )}
