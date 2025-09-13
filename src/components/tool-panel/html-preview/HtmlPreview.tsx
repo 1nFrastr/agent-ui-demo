@@ -182,7 +182,7 @@ export const HtmlPreview: React.FC<HtmlPreviewProps> = ({
 
   // 生成沙箱属性
   const sandboxProps = sandboxed ? {
-    sandbox: "allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+    sandbox: "allow-scripts allow-forms allow-popups allow-modals"
   } : {}
 
   return (
