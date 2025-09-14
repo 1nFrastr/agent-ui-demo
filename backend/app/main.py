@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import chat, health
 from app.config import settings
@@ -82,6 +83,12 @@ async def general_exception_handler(request, exc: Exception):
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
+# Mount static files for testing
+import os
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)))
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 
 @app.get("/")
 async def root():
@@ -91,6 +98,7 @@ async def root():
         "version": settings.version,
         "status": "running",
         "docs": "/docs" if settings.debug else None,
+        "test_page": "/static/test_stream.html" if settings.debug else None,
     }
 
 

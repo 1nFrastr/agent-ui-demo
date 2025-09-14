@@ -8,12 +8,13 @@ from app.models.chat import ChatRequest
 from app.models.response import ChatResponse
 from app.services.chat_service import ChatService
 from app.core.exceptions import AgentExecutionError
+from app.config import Settings, get_settings
 
 router = APIRouter()
 
-def get_chat_service() -> ChatService:
+def get_chat_service(settings: Settings = Depends(get_settings)) -> ChatService:
     """Dependency to get chat service instance."""
-    return ChatService()
+    return ChatService(settings)
 
 @router.post("/stream", response_class=StreamingResponse)
 async def stream_chat(
@@ -25,10 +26,10 @@ async def stream_chat(
     async def generate_events() -> AsyncGenerator[str, None]:
         try:
             # Process the message and stream events
-            async for event in chat_service.stream_chat(
+            async for event in chat_service.stream_response(
                 message=request.message,
                 session_id=request.sessionId,
-                agent_type=request.agentType
+                config={"agent_type": request.agentType}
             ):
                 # Format as Server-Sent Event
                 event_data = json.dumps(event, ensure_ascii=False)
