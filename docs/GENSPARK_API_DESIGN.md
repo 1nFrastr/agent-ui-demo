@@ -196,9 +196,6 @@ data: {"message_id": "xxx", "field_name": "content", "delta": "很对", "type": 
 - **web_search**: 网络搜索
 - **crawler**: 网页爬虫
 - **think**: 思考过程
-- **terminal**: 终端操作
-- **python**: Python代码执行
-- **browser**: 浏览器操作
 
 ### 工具调用示例
 
