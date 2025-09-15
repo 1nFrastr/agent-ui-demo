@@ -10,6 +10,7 @@ from app.agents.base import BaseAgent
 from app.tools.registry import tool_registry
 from app.tools.web_search import WebSearchTool
 from app.tools.web_content import WebContentTool
+from app.services.llm_service import get_llm_service
 from app.config import settings
 from app.core.exceptions import AgentExecutionError
 
@@ -24,6 +25,7 @@ class DeepResearchAgent(BaseAgent):
         super().__init__("DeepResearchAgent")
         self.web_search_tool = WebSearchTool()
         self.web_content_tool = WebContentTool()
+        self.llm_service = get_llm_service()
     
     async def get_capabilities(self) -> List[str]:
         """Get agent capabilities."""
@@ -149,20 +151,40 @@ class DeepResearchAgent(BaseAgent):
                 content_metadata
             )
             
-            # Step 4: Content Analysis and Summary
+            # Step 4: LLM-Powered Analysis with Streaming
             analysis_message_id = self.generate_message_id()
             
-            # Generate comprehensive analysis
-            analysis = self._create_analysis_report(message, search_results, web_contents)
+            # Start LLM analysis tool
+            llm_tool_id = str(uuid.uuid4())
+            yield self.create_tool_start_event(
+                "llm_analysis",
+                "基于搜索结果进行AI智能分析...",
+                llm_tool_id
+            )
             
-            # Stream the analysis content
-            chunk_size = 50
-            for i in range(0, len(analysis), chunk_size):
-                chunk = analysis[i:i + chunk_size]
+            # Stream LLM analysis in real-time
+            analysis_chunks = []
+            async for chunk in self.llm_service.generate_analysis_stream(
+                message, search_results, web_contents, session_id
+            ):
+                analysis_chunks.append(chunk)
                 yield self.create_text_chunk_event(chunk, analysis_message_id)
-                await asyncio.sleep(0.01)  # Small delay for streaming effect
             
-            yield self.create_message_complete_event(analysis_message_id, analysis)
+            # Complete the analysis
+            full_analysis = "".join(analysis_chunks)
+            
+            yield self.create_tool_end_event(
+                llm_tool_id,
+                "success",
+                "AI分析完成",
+                {
+                    "analysis_length": len(full_analysis),
+                    "model_used": settings.openai_model,
+                    "tokens_estimated": len(full_analysis) // 4  # Rough estimate
+                }
+            )
+            
+            yield self.create_message_complete_event(analysis_message_id, full_analysis)
             
             self.logger.info(f"Research completed for query: {message}")
             
@@ -198,76 +220,3 @@ class DeepResearchAgent(BaseAgent):
                 continue
         
         return contents
-    
-    def _create_analysis_report(self, query: str, search_results, web_contents: List) -> str:
-        """Create comprehensive analysis report."""
-        analysis = f"# 研究报告：{query}\n\n"
-        
-        analysis += "## 🔍 搜索结果概览\n\n"
-        analysis += f"针对查询「{query}」，我们进行了全面的网络搜索，共找到 {len(search_results.results)} 个相关结果。以下是主要发现：\n\n"
-        
-        for i, result in enumerate(search_results.results[:5], 1):
-            analysis += f"**{i}. {result.title}**\n"
-            analysis += f"- 🔗 链接：{result.url}\n"
-            analysis += f"- 📝 摘要：{result.summary}\n"
-            analysis += f"- 🌐 来源：{result.domain}\n\n"
-        
-        analysis += "## 📖 深度内容分析\n\n"
-        
-        success_contents = [c for c in web_contents if c.status == "success"]
-        if success_contents:
-            main_content = success_contents[0]
-            analysis += f"**主要信息来源：{main_content.title}**\n\n"
-            
-            if main_content.summary:
-                analysis += f"**内容摘要：**\n{main_content.summary}\n\n"
-            
-            if main_content.metadata:
-                analysis += "**文档信息：**\n"
-                if main_content.metadata.author:
-                    analysis += f"- 👤 作者：{main_content.metadata.author}\n"
-                if main_content.metadata.publish_date:
-                    analysis += f"- 📅 发布时间：{main_content.metadata.publish_date}\n"
-                if main_content.metadata.description:
-                    analysis += f"- 📋 描述：{main_content.metadata.description}\n"
-                analysis += "\n"
-            
-            # Extract key content highlights
-            content_preview = main_content.content[:800] if main_content.content else ""
-            if content_preview:
-                analysis += f"**内容要点：**\n\n{content_preview}...\n\n"
-        
-        analysis += "## 📊 综合分析\n\n"
-        
-        if "大冰" in query and "他们最幸福" in query:
-            analysis += """基于搜索和内容分析，《他们最幸福》是大冰的代表作品：
-
-**🎯 核心主题：**
-- 记录真实人生故事，展现平凡人的不平凡选择
-- 探讨什么是真正的幸福和自由
-- 倡导勇敢做自己的生活态度
-
-**📚 作品特色：**
-- 真实性强：每个故事都来源于作者的亲身经历
-- 情感真挚：用温暖的文字记录人生百态
-- 价值观独特：鼓励读者追求内心真正想要的生活
-
-**💫 社会影响：**
-- 在年轻读者中产生广泛共鸣
-- 启发人们重新思考生活的意义
-- 传递正能量和人生智慧"""
-        else:
-            analysis += f"通过对「{query}」的深入研究，我们收集了来自多个权威来源的信息。"
-            analysis += "搜索结果显示了该主题的多个维度和相关背景，为进一步了解提供了全面的信息基础。"
-        
-        analysis += "\n\n## 🔗 参考资料\n\n"
-        analysis += "本报告基于以下来源的信息整理而成：\n\n"
-        
-        for i, result in enumerate(search_results.results[:3], 1):
-            analysis += f"{i}. [{result.title}]({result.url})\n"
-        
-        analysis += "\n---\n\n"
-        analysis += "📝 *此报告通过AI智能搜索和分析生成，信息准确性请以原始来源为准。*\n"
-        analysis += f"� *生成时间：{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC*"
-        
-        return analysis
