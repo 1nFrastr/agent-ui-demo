@@ -100,25 +100,18 @@ class WebContentTool(BaseTool):
             logger.info(f"Content fetch completed in {fetch_time:.2f}s for: {url}")
             
             # Parse with BeautifulSoup using lxml parser for better performance
-            parse_start = time.time()
             try:
                 soup = BeautifulSoup(content, 'lxml')
             except:
                 # Fallback to html.parser if lxml is not available
                 soup = BeautifulSoup(content, 'html.parser')
             
-            parse_time = time.time() - parse_start
-            logger.info(f"HTML parsing completed in {parse_time:.2f}s for: {url}")
-            
             # Extract title
             title_tag = soup.find('title')
             title = title_tag.get_text().strip() if title_tag else ""
             
             # Extract main content (elements removal is handled inside the method)
-            content_start = time.time()
             main_content = self._extract_main_content(soup)
-            content_time = time.time() - content_start
-            logger.info(f"Content extraction completed in {content_time:.2f}s for: {url}")
             
             # Limit content length
             if len(main_content) > max_content_length:
@@ -127,22 +120,13 @@ class WebContentTool(BaseTool):
             # Extract images
             images = []
             if extract_images:
-                image_start = time.time()
                 images = self._extract_images(soup, url)
-                image_time = time.time() - image_start
-                logger.info(f"Image extraction completed in {image_time:.2f}s, found {len(images)} images for: {url}")
             
             # Extract metadata
-            metadata_start = time.time()
             metadata = self._extract_metadata(soup)
-            metadata_time = time.time() - metadata_start
-            logger.info(f"Metadata extraction completed in {metadata_time:.2f}s for: {url}")
             
             # Generate summary
-            summary_start = time.time()
             summary = self._generate_summary(main_content)
-            summary_time = time.time() - summary_start
-            logger.info(f"Summary generation completed in {summary_time:.2f}s for: {url}")
             
             total_time = time.time() - start_time
             logger.info(f"Total content extraction completed in {total_time:.2f}s for: {url}")
