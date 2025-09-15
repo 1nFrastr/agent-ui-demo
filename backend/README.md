@@ -2,6 +2,32 @@
 
 基于 FastAPI + LangChain 构建的智能对话后端系统，支持多轮对话、工具调用协调和实时流式响应。
 
+## 依赖管理
+
+本项目使用 **uv** 作为现代 Python 包管理器，配合 `pyproject.toml` 进行依赖管理：
+
+- `pyproject.toml`: 定义项目依赖和开发依赖
+- `uv.lock`: 锁定确切的依赖版本（类似 package-lock.json）
+
+### 常用命令
+
+```bash
+# 安装所有依赖
+uv sync
+
+# 安装包含开发依赖
+uv sync --dev
+
+# 添加新依赖
+uv add package-name
+
+# 添加开发依赖
+uv add --dev package-name
+
+# 更新依赖
+uv lock --upgrade
+```
+
 ## 快速开始
 
 ### 环境要求
@@ -20,12 +46,11 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 # Linux/macOS
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 初始化项目并创建虚拟环境
-uv init --python 3.11
-uv venv
+# 创建虚拟环境
+uv venv --python 3.11
 
-# 安装依赖
-uv pip install -r requirements.txt
+# 安装依赖（会自动从 pyproject.toml 读取）
+uv sync
 
 # 激活虚拟环境
 source .venv/Scripts/activate  # Windows (Git Bash)
@@ -40,8 +65,8 @@ python -m venv .venv
 source .venv/Scripts/activate  # Windows (Git Bash)
 # source .venv/bin/activate    # Linux/macOS
 
-# 安装依赖
-pip install -r requirements.txt
+# 安装依赖（推荐升级到 uv 进行依赖管理）
+pip install -e .
 ```
 
 ### 配置环境变量
@@ -165,6 +190,11 @@ uv run pytest tests/test_agents/
 
 # 测试覆盖率
 uv run pytest --cov=app
+
+# 或安装开发依赖后运行
+uv sync --dev
+source .venv/Scripts/activate
+pytest
 ```
 
 ### 代码格式化
@@ -203,16 +233,6 @@ asyncio.run(test())
 
 ## 部署
 
-### Docker 部署
-
-```bash
-# 构建镜像
-docker build -t agent-ui-backend .
-
-# 运行容器
-docker run -p 8000:8000 --env-file .env agent-ui-backend
-```
-
 ### 环境配置
 
 - **开发环境**: 启用调试模式，详细日志
@@ -234,45 +254,3 @@ docker run -p 8000:8000 --env-file .env agent-ui-backend
 - `CORS_ORIGINS`: 允许的跨域来源
 - `RATE_LIMIT_REQUESTS`: 请求频率限制
 
-## 故障排除
-
-### 常见问题
-
-1. **API 密钥错误**
-   - 检查 .env 文件中的 API 密钥是否正确
-   - 确认 API 密钥有足够的权限
-
-2. **搜索功能不工作**
-   - 验证 Google API 密钥和搜索引擎 ID
-   - 检查 API 配额是否充足
-
-3. **端口占用**
-   - 修改 .env 文件中的 PORT 配置
-   - 或使用 `--port` 参数指定端口
-
-4. **依赖安装失败**
-   - 更新 pip: `pip install --upgrade pip`
-   - 清理缓存: `pip cache purge`
-   - 使用镜像源: `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple/`
-
-### 日志查看
-
-```bash
-# 查看应用日志
-tail -f logs/app.log
-
-# 查看错误日志
-tail -f logs/error.log
-```
-
-## 贡献
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
