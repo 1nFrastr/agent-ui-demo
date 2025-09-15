@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from typing import AsyncGenerator
 import json
 import asyncio
+from datetime import datetime, timezone
 
 from app.models.chat import ChatRequest
 from app.models.response import ChatResponse
@@ -59,7 +60,7 @@ async def stream_chat(
             # Send generic error event
             error_event = {
                 "type": "error",
-                "timestamp": "2024-01-01T00:00:00Z",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "error": {
                     "message": f"Internal server error: {str(e)}",
                     "agent": "system",
@@ -89,10 +90,17 @@ async def chat(
     """Standard chat endpoint (non-streaming)."""
     
     try:
-        response = await chat_service.process_chat(
+        response_content = await chat_service.process_message(
             message=request.message,
             session_id=request.sessionId,
-            agent_type=request.agentType
+            config={"agent_type": request.agentType}
+        )
+        
+        # Create response model
+        response = ChatResponse(
+            message=response_content,
+            sessionId=request.sessionId,
+            timestamp=datetime.now(timezone.utc).isoformat()
         )
         return response
         
