@@ -133,8 +133,8 @@ class LLMConnectivityTester:
             ):
                 chunks.append(chunk)
                 chunk_count += 1
-                if chunk_count <= 3:  # 只打印前3个块
-                    print(f"     Received chunk {chunk_count}: '{chunk[:50]}...'")
+                # if chunk_count <= 3:  # 只打印前3个块
+                print(f"     Received chunk {chunk_count}: '{chunk[:50]}...'")
                 
                 # 防止测试时间过长
                 if time.time() - start_time > 30:

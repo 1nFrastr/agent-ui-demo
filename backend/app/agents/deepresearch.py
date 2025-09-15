@@ -211,7 +211,7 @@ class DeepResearchAgent(BaseAgent):
         for result in search_results[:3]:  # Process top 3 results
             try:
                 execution = await self.web_content_tool.run(
-                    {"url": result.url, "extract_images": True},
+                    {"url": result.url, "extract_images": False},
                     self.session_id
                 )
                 contents.append(execution.result)

@@ -1,6 +1,7 @@
 """Web content extraction tool implementation."""
 
 import logging
+import time
 from typing import Any, Dict, List, Optional
 import httpx
 from bs4 import BeautifulSoup
@@ -41,7 +42,7 @@ class WebContentTool(BaseTool):
                 type="boolean",
                 description="Whether to extract image information",
                 required=False,
-                default=True
+                default=False  # Changed to False for better performance
             ),
             ToolParameter(
                 name="max_content_length",
@@ -59,34 +60,65 @@ class WebContentTool(BaseTool):
     async def execute(self, parameters: Dict[str, Any]) -> WebContentData:
         """Execute web content extraction."""
         url = parameters["url"]
-        extract_images = parameters.get("extract_images", True)
+        extract_images = parameters.get("extract_images", False)
         max_content_length = parameters.get("max_content_length", settings.web_content_max_length)
         
+        start_time = time.time()
+        logger.info(f"Starting content extraction for: {url}")
+        
         try:
-            # Fetch web page
+            # Fetch web page with content size check
+            fetch_start = time.time()
             async with httpx.AsyncClient(
                 timeout=settings.request_timeout,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
                 }
             ) as client:
+                # First, make a HEAD request to check content size
+                try:
+                    head_response = await client.head(url)
+                    content_length = head_response.headers.get('content-length')
+                    if content_length and int(content_length) > 10 * 1024 * 1024:  # 10MB limit
+                        logger.warning(f"Content too large ({content_length} bytes) for: {url}")
+                        return WebContentData(
+                            url=url,
+                            title="",
+                            content="",
+                            status="failed",
+                            error="Content too large (>10MB)"
+                        )
+                except Exception:
+                    # If HEAD request fails, continue with GET
+                    pass
+                
                 response = await client.get(url)
                 response.raise_for_status()
                 content = response.text
+                
+            fetch_time = time.time() - fetch_start
+            logger.info(f"Content fetch completed in {fetch_time:.2f}s for: {url}")
             
-            # Parse with BeautifulSoup
-            soup = BeautifulSoup(content, 'html.parser')
+            # Parse with BeautifulSoup using lxml parser for better performance
+            parse_start = time.time()
+            try:
+                soup = BeautifulSoup(content, 'lxml')
+            except:
+                # Fallback to html.parser if lxml is not available
+                soup = BeautifulSoup(content, 'html.parser')
+            
+            parse_time = time.time() - parse_start
+            logger.info(f"HTML parsing completed in {parse_time:.2f}s for: {url}")
             
             # Extract title
             title_tag = soup.find('title')
             title = title_tag.get_text().strip() if title_tag else ""
             
-            # Remove script and style elements
-            for script in soup(["script", "style", "nav", "footer", "header"]):
-                script.decompose()
-            
-            # Extract main content
+            # Extract main content (elements removal is handled inside the method)
+            content_start = time.time()
             main_content = self._extract_main_content(soup)
+            content_time = time.time() - content_start
+            logger.info(f"Content extraction completed in {content_time:.2f}s for: {url}")
             
             # Limit content length
             if len(main_content) > max_content_length:
@@ -95,13 +127,25 @@ class WebContentTool(BaseTool):
             # Extract images
             images = []
             if extract_images:
+                image_start = time.time()
                 images = self._extract_images(soup, url)
+                image_time = time.time() - image_start
+                logger.info(f"Image extraction completed in {image_time:.2f}s, found {len(images)} images for: {url}")
             
             # Extract metadata
+            metadata_start = time.time()
             metadata = self._extract_metadata(soup)
+            metadata_time = time.time() - metadata_start
+            logger.info(f"Metadata extraction completed in {metadata_time:.2f}s for: {url}")
             
             # Generate summary
+            summary_start = time.time()
             summary = self._generate_summary(main_content)
+            summary_time = time.time() - summary_start
+            logger.info(f"Summary generation completed in {summary_time:.2f}s for: {url}")
+            
+            total_time = time.time() - start_time
+            logger.info(f"Total content extraction completed in {total_time:.2f}s for: {url}")
             
             return WebContentData(
                 url=url,
@@ -114,6 +158,8 @@ class WebContentTool(BaseTool):
             )
             
         except httpx.HTTPStatusError as e:
+            error_time = time.time() - start_time
+            logger.error(f"HTTP error after {error_time:.2f}s for {url}: {e.response.status_code}")
             return WebContentData(
                 url=url,
                 title="",
@@ -122,7 +168,8 @@ class WebContentTool(BaseTool):
                 error=f"HTTP error: {e.response.status_code}"
             )
         except Exception as e:
-            self.logger.error(f"Content extraction failed for {url}: {e}", exc_info=True)
+            error_time = time.time() - start_time
+            logger.error(f"Content extraction failed after {error_time:.2f}s for {url}: {e}", exc_info=True)
             return WebContentData(
                 url=url,
                 title="",
@@ -132,8 +179,12 @@ class WebContentTool(BaseTool):
             )
     
     def _extract_main_content(self, soup: BeautifulSoup) -> str:
-        """Extract main text content from soup."""
-        # Try to find main content areas
+        """Extract main text content from soup with optimized performance."""
+        # Remove unwanted elements first to reduce processing
+        for element in soup(["script", "style", "nav", "footer", "header", "aside", "iframe", "noscript"]):
+            element.decompose()
+        
+        # Try to find main content areas in priority order
         main_selectors = [
             'main',
             'article', 
@@ -141,32 +192,33 @@ class WebContentTool(BaseTool):
             '.main-content',
             '.post-content',
             '.entry-content',
-            '#content',
-            '.container'
+            '#content'
         ]
         
-        main_content = ""
+        main_element = None
         for selector in main_selectors:
-            elements = soup.select(selector)
+            elements = soup.select(selector, limit=1)  # Limit to first match
             if elements:
-                main_content = elements[0].get_text(separator='\n', strip=True)
+                main_element = elements[0]
                 break
         
         # Fallback to body if no main content found
-        if not main_content:
-            body = soup.find('body')
-            if body:
-                main_content = body.get_text(separator='\n', strip=True)
+        if not main_element:
+            main_element = soup.find('body')
         
-        # Clean up the text
-        lines = main_content.split('\n')
-        cleaned_lines = []
-        for line in lines:
-            line = line.strip()
-            if line and len(line) > 10:  # Filter out very short lines
-                cleaned_lines.append(line)
+        if not main_element:
+            return ""
         
-        return '\n\n'.join(cleaned_lines)
+        # Extract text more efficiently
+        text_content = main_element.get_text(separator='\n', strip=True)
+        
+        # Quick cleanup - only process if needed
+        if len(text_content) > 1000:  # Only clean large content
+            lines = text_content.split('\n')
+            cleaned_lines = [line.strip() for line in lines if line.strip() and len(line.strip()) > 10]
+            return '\n\n'.join(cleaned_lines)
+        
+        return text_content
     
     def _extract_images(self, soup: BeautifulSoup, base_url: str) -> List[ImageInfo]:
         """Extract image information."""

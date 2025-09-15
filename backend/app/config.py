@@ -42,11 +42,11 @@ class Settings(BaseSettings):
     
     # Web Search Configuration
     web_search_max_results: int = 10
-    web_search_timeout: int = 30
-    request_timeout: int = 30  # Add this for web_search.py
+    web_search_timeout: int = 15
+    request_timeout: int = 10  # Optimized timeout for web requests
     
     # Web Content Configuration
-    web_content_timeout: int = 30
+    web_content_timeout: int = 10
     web_content_max_content_length: int = 1000000  # 1MB
     web_content_max_images: int = 10
     web_content_max_length: int = 1000000  # Add this for web_content.py
