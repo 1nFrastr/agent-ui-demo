@@ -1,7 +1,7 @@
 """Health check API endpoints."""
 
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 
 from fastapi import APIRouter, Depends
@@ -17,7 +17,7 @@ async def health_check(settings: Settings = Depends(get_settings)) -> Dict[str, 
     """Basic health check endpoint."""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": settings.version,
         "environment": "development" if settings.debug else "production",
     }
@@ -33,7 +33,7 @@ async def detailed_health_check(settings: Settings = Depends(get_settings)) -> D
     
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": settings.version,
         "environment": "development" if settings.debug else "production",
         "system": {
