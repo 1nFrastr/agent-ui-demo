@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     # Tavily Search Configuration (AI-optimized search)
     tavily_api_key: Optional[str] = None
     
+    # LangSmith Configuration for tracing and monitoring
+    langsmith_api_key: Optional[str] = None
+    langsmith_project: str = "agent-ui-backend"
+    langsmith_endpoint: str = "https://api.smith.langchain.com"
+    langsmith_tracing: bool = True  # Enable/disable tracing
+    
     # Web Search Configuration
     web_search_max_results: int = 10
     web_search_timeout: int = 15

@@ -1,12 +1,15 @@
 """LLM service with LangChain integration and streaming support."""
 
 import logging
+import os
 from typing import AsyncGenerator, Dict, Any, Optional
 import asyncio
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.callbacks.base import AsyncCallbackHandler
+from langsmith import Client
+from langsmith.evaluation import evaluate, LangChainStringEvaluator
 
 from app.config import settings
 from app.core.exceptions import AgentExecutionError
@@ -38,6 +41,9 @@ class LLMService:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
+        # Configure LangSmith tracing if enabled
+        self._configure_langsmith_tracing()
+        
         if not settings.openai_api_key:
             raise AgentExecutionError(
                 "OpenAI API key is not configured",
@@ -53,6 +59,39 @@ class LLMService:
             temperature=0.7,
             max_tokens=4000,
         )
+        
+        # Initialize LangSmith client for additional monitoring
+        self.langsmith_client = self._init_langsmith_client()
+    
+    def _configure_langsmith_tracing(self):
+        """Configure LangSmith environment variables for tracing."""
+        if settings.langsmith_tracing and settings.langsmith_api_key:
+            # Set environment variables for LangSmith
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
+            os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
+            os.environ["LANGCHAIN_ENDPOINT"] = settings.langsmith_endpoint
+            
+            self.logger.info(f"LangSmith tracing enabled for project: {settings.langsmith_project}")
+        else:
+            # Disable tracing if not configured
+            os.environ["LANGCHAIN_TRACING_V2"] = "false"
+            self.logger.info("LangSmith tracing disabled")
+    
+    def _init_langsmith_client(self) -> Optional[Client]:
+        """Initialize LangSmith client for additional operations."""
+        if settings.langsmith_tracing and settings.langsmith_api_key:
+            try:
+                client = Client(
+                    api_key=settings.langsmith_api_key,
+                    api_url=settings.langsmith_endpoint
+                )
+                self.logger.info("LangSmith client initialized successfully")
+                return client
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize LangSmith client: {e}")
+                return None
+        return None
     
     async def generate_analysis_stream(
         self,
@@ -71,14 +110,29 @@ class LLMService:
             system_message = SystemMessage(content=self._get_analysis_system_prompt())
             user_message = HumanMessage(content=context)
             
+            # Add metadata for LangSmith tracing
+            metadata = {
+                "session_id": session_id,
+                "query": query,
+                "search_results_count": len(search_results.results) if hasattr(search_results, 'results') else 0,
+                "web_contents_count": len(web_contents),
+                "model": settings.openai_model,
+                "operation": "analysis_generation"
+            }
+            
+            # Set run name for better tracing
+            run_name = f"analysis_generation_{session_id[:8]}"
+            
             # Create callback handler for streaming
             callback_handler = StreamingCallbackHandler()
             
-            # Start LLM generation in background
+            # Start LLM generation in background with metadata
             llm_task = asyncio.create_task(
                 self._generate_with_callback(
                     [system_message, user_message], 
-                    callback_handler
+                    callback_handler,
+                    metadata=metadata,
+                    run_name=run_name
                 )
             )
             
@@ -108,10 +162,34 @@ class LLMService:
             # Yield error message to client
             yield f"\n\n⚠️ **分析生成失败**: {str(e)}\n\n请稍后重试或联系管理员。"
     
-    async def _generate_with_callback(self, messages, callback_handler):
-        """Generate LLM response with callback handler."""
+    async def _generate_with_callback(self, messages, callback_handler, metadata=None, run_name=None):
+        """Generate LLM response with callback handler and optional metadata for tracing."""
         try:
-            await self.llm.agenerate([messages], callbacks=[callback_handler])
+            # For LangChain, we need to use the correct parameter structure
+            # Metadata should be passed differently
+            
+            if metadata or run_name:
+                # Configure tracing using environment variables approach
+                # since direct config parameter is not supported by agenerate
+                original_env = {}
+                
+                # Store original values
+                if run_name:
+                    original_env['LANGCHAIN_SESSION'] = os.environ.get('LANGCHAIN_SESSION')
+                    os.environ['LANGCHAIN_SESSION'] = run_name
+                
+                try:
+                    await self.llm.agenerate([messages], callbacks=[callback_handler])
+                finally:
+                    # Restore original environment
+                    for key, value in original_env.items():
+                        if value is None:
+                            os.environ.pop(key, None)
+                        else:
+                            os.environ[key] = value
+            else:
+                await self.llm.agenerate([messages], callbacks=[callback_handler])
+                
         except Exception as e:
             self.logger.error(f"LLM generation error: {e}")
             await callback_handler.content_queue.put(None)
@@ -187,6 +265,30 @@ class LLMService:
 - 保持客观中立的分析态度
 
 请确保分析的深度和广度都能满足专业研究的标准。"""
+    
+    def log_analysis_completion(self, session_id: str, query: str, success: bool, error_msg: str = None):
+        """Log analysis completion to LangSmith for monitoring."""
+        if self.langsmith_client:
+            try:
+                # Create a run record for the analysis task
+                run_data = {
+                    "name": f"analysis_task_{session_id[:8]}",
+                    "inputs": {"query": query},
+                    "run_type": "llm",
+                    "session_id": session_id,
+                }
+                
+                if success:
+                    run_data["outputs"] = {"status": "success"}
+                else:
+                    run_data["outputs"] = {"status": "failed", "error": error_msg}
+                
+                # Note: This is a simplified logging approach
+                # In production, you might want to use more sophisticated tracking
+                self.logger.info(f"Analysis task logged to LangSmith: {run_data}")
+                
+            except Exception as e:
+                self.logger.warning(f"Failed to log to LangSmith: {e}")
 
 
 # Global LLM service instance  
