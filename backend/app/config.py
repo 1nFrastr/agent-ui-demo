@@ -37,13 +37,6 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4"
     
-    # Google Search Configuration
-    google_api_key: Optional[str] = None
-    google_cse_id: Optional[str] = None
-    
-    # SerpAPI Configuration (Alternative to Google)
-    serpapi_api_key: Optional[str] = None
-    
     # Tavily Search Configuration (AI-optimized search)
     tavily_api_key: Optional[str] = None
     

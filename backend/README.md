@@ -78,8 +78,7 @@ cp .env.example .env
 # 编辑 .env 文件，填入必要的 API 密钥
 # 必需配置：
 # - OPENAI_API_KEY: OpenAI API 密钥
-# - GOOGLE_API_KEY: Google API 密钥 (用于搜索)
-# - GOOGLE_CSE_ID: Google 自定义搜索引擎 ID
+# - TAVILY_API_KEY: Tavily AI 搜索 API 密钥
 ```
 
 ### 启动开发服务器
@@ -133,8 +132,8 @@ backend/
 
 ### 2. 工具系统
 
-- **WebSearchTool**: 网页搜索工具
-- **WebContentTool**: 网页内容提取工具
+- **WebSearchTool**: 基于 Tavily AI 的智能网页搜索工具
+- **WebContentTool**: 网页内容提取和分析工具
 - 可扩展的工具注册系统
 
 ### 3. EventStream API
@@ -244,8 +243,7 @@ asyncio.run(test())
 ### 必需配置
 
 - `OPENAI_API_KEY`: OpenAI API 密钥
-- `GOOGLE_API_KEY`: Google API 密钥
-- `GOOGLE_CSE_ID`: Google 自定义搜索引擎 ID
+- `TAVILY_API_KEY`: Tavily AI 搜索 API 密钥
 
 ### 可选配置
 
