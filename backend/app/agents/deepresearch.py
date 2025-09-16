@@ -7,6 +7,9 @@ import uuid
 from datetime import datetime
 import httpx
 
+# LangSmith 追踪
+from langsmith import traceable
+
 from app.agents.base import BaseAgent
 from app.tools.registry import tool_registry
 from app.tools.web_search import WebSearchTool
@@ -63,6 +66,7 @@ class DeepResearchAgent(BaseAgent):
             "content_synthesis"
         ]
     
+    @traceable(name="deep_research_agent")
     async def process_message(
         self, 
         message: str, 
@@ -252,6 +256,7 @@ class DeepResearchAgent(BaseAgent):
                 details={"query": message, "error": str(e)}
             )
     
+    @traceable(name="web_search")
     async def _perform_web_search(self, query: str):
         """Perform web search."""
         execution = await self.web_search_tool.run(
@@ -260,6 +265,7 @@ class DeepResearchAgent(BaseAgent):
         )
         return execution.result
     
+    @traceable(name="content_extraction")
     async def _extract_web_contents(self, search_results: List) -> List:
         """Extract content from multiple URLs with true parallelization."""
         contents = []
@@ -288,6 +294,7 @@ class DeepResearchAgent(BaseAgent):
         
         return contents
     
+    @traceable(name="extract_single_url")
     async def _extract_single_content_parallel(self, search_result, client: httpx.AsyncClient, index: int):
         """使用共享客户端进行真正的并行内容提取"""
         start_time = asyncio.get_event_loop().time()
