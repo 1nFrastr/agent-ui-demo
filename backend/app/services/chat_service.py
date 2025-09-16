@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 
 from app.agents.deepresearch import DeepResearchAgent
+from app.agents.ai_developer import AIDeveloperAgent
 from app.config import Settings
 from app.core.exceptions import AgentExecutionError
 
@@ -19,6 +20,7 @@ class ChatService:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.deepresearch_agent = DeepResearchAgent()
+        self.ai_developer_agent = AIDeveloperAgent()
         self.logger = logging.getLogger("app.services.ChatService")
     
     async def process_message(
@@ -66,8 +68,8 @@ class ChatService:
         try:
             self.logger.info(f"Starting stream for session {session_id}: {message[:100]}...")
             
-            # Determine which agent to use based on message content
-            agent = self._select_agent(message)
+            # Determine which agent to use based on config or message content
+            agent = self._select_agent(message, config)
             
             # Stream events from the agent
             async for event in agent.process_message(
@@ -91,23 +93,45 @@ class ChatService:
                 }
             }
     
-    def _select_agent(self, message: str) -> DeepResearchAgent:
-        """Select appropriate agent based on message content."""
+    def _select_agent(self, message: str, config: Dict[str, Any] = None):
+        """Select appropriate agent based on config or message content."""
         
-        # For now, always use DeepResearchAgent
-        # In the future, we can add logic to select different agents
-        # based on message content, user preferences, etc.
+        # First check if agent type is specified in config
+        if config and config.get("agent_type"):
+            agent_type = config["agent_type"].lower()
+            if agent_type == "ai_developer" or agent_type == "aideveloper":
+                self.logger.info(f"Using AIDeveloperAgent (specified in config)")
+                return self.ai_developer_agent
+            elif agent_type == "deepresearch":
+                self.logger.info(f"Using DeepResearchAgent (specified in config)")
+                return self.deepresearch_agent
         
+        # If no agent type specified, try to infer from message content
+        message_lower = message.lower()
+        
+        # Check for AI developer keywords
+        developer_keywords = [
+            "生成", "创建", "开发", "网页", "html", "css", "javascript", "js",
+            "前端", "页面", "项目", "代码", "编程",
+            "generate", "create", "develop", "webpage", "frontend", "project", "code"
+        ]
+        
+        if any(keyword in message_lower for keyword in developer_keywords):
+            self.logger.info(f"Using AIDeveloperAgent (inferred from content)")
+            return self.ai_developer_agent
+        
+        # Check for research keywords
         research_keywords = [
             "搜索", "查找", "了解", "研究", "信息", "资料", 
             "search", "find", "research", "information"
         ]
         
-        message_lower = message.lower()
         if any(keyword in message_lower for keyword in research_keywords):
+            self.logger.info(f"Using DeepResearchAgent (inferred from content)")
             return self.deepresearch_agent
         
         # Default to research agent
+        self.logger.info(f"Using DeepResearchAgent (default)")
         return self.deepresearch_agent
     
     async def get_session_info(self, session_id: str) -> Dict[str, Any]:

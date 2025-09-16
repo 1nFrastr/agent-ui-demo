@@ -279,6 +279,42 @@ class LLMService:
 
 请确保分析的深度和广度都能满足专业研究的标准。"""
     
+    async def generate_completion(
+        self,
+        prompt: str,
+        max_tokens: int = 2000,
+        temperature: float = 0.7,
+        session_id: str = None
+    ) -> str:
+        """Generate a single completion response."""
+        try:
+            # Create messages
+            user_message = HumanMessage(content=prompt)
+            
+            # Add metadata for tracing
+            metadata = {
+                "session_id": session_id or "unknown",
+                "model": settings.openai_model,
+                "operation": "code_generation",
+                "max_tokens": max_tokens,
+                "temperature": temperature
+            }
+            
+            # Configure LLM parameters
+            llm_with_params = self.llm.bind(
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            
+            # Generate response
+            response = await llm_with_params.ainvoke([user_message])
+            
+            return response.content
+            
+        except Exception as e:
+            self.logger.error(f"LLM completion failed: {e}", exc_info=True)
+            raise
+    
     def log_analysis_completion(self, session_id: str, query: str, success: bool, error_msg: str = None):
         """Log analysis completion to LangSmith for monitoring."""
         if self.langsmith_client:

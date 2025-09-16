@@ -126,7 +126,10 @@ async def root():
         "version": settings.version,
         "status": "running",
         "docs": "/docs" if settings.debug else None,
-        "test_page": "/static/test_stream.html" if settings.debug else None,
+        "test_pages": {
+            "deepresearch_agent": "/static/test_stream.html",
+            "ai_developer_agent": "/static/test_ai_developer.html"
+        } if settings.debug else None,
     }
 
 

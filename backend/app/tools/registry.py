@@ -7,6 +7,8 @@ from app.models.tool import ToolDefinition, ToolRegistry as ToolRegistryModel
 from app.tools.base import BaseTool
 from app.tools.web_search import WebSearchTool
 from app.tools.web_content import WebContentTool
+from app.tools.code_generator import CodeGeneratorTool
+from app.tools.project_structure import ProjectStructureTool
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,8 @@ class ToolRegistry:
         tools = [
             WebSearchTool(),
             WebContentTool(),
+            CodeGeneratorTool(),
+            ProjectStructureTool(),
         ]
         
         for tool in tools:

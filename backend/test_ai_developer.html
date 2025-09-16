@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Developer Agent - 项目生成测试</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .container { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .input-section { margin-bottom: 20px; }
+        input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px; }
+        textarea { height: 80px; resize: vertical; }
+        button { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .status { padding: 10px; border-radius: 4px; margin-bottom: 20px; font-weight: bold; }
+        .status.connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.connecting { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .output { background: #1a1a1a; color: #00ff00; padding: 20px; border-radius: 4px; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 12px; line-height: 1.4; max-height: 600px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+        .user-output { background: #f8f9fa; color: #333; padding: 20px; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; white-space: pre-wrap; }
+        .message-container { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; border-left: 4px solid #007bff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .message-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: #666; }
+        .message-content { color: #333; line-height: 1.6; }
+        .typing-cursor { display: inline-block; width: 2px; height: 1em; background-color: #007bff; animation: blink 1s infinite; margin-left: 2px; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        .event { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        .event-type { color: #ffff00; font-weight: bold; }
+        .event-data { color: #00ff00; margin-left: 20px; }
+        .timestamp { color: #888; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ AI Developer Agent - 前端项目生成测试</h1>
+        <div class="input-section">
+            <label>API 地址:</label>
+            <input type="text" id="apiUrl" value="http://localhost:8000/api/chat/stream">
+        </div>
+        <div class="input-section">
+            <label>Session ID:</label>
+            <input type="text" id="sessionId" value="">
+        </div>
+        <div class="input-section">
+            <label>项目需求描述:</label>
+            <textarea id="messageInput" placeholder="如：生成一个带有轮播图和登录表单的响应式首页">生成一个带有轮播图和登录表单的响应式首页</textarea>
+        </div>
+        <div class="input-section">
+            <button id="sendBtn" onclick="sendMessage()">🚀 生成项目</button>
+            <button id="clearBtn" onclick="clearOutput()">🗑️ 清空输出</button>
+            <button id="stopBtn" onclick="stopStream()" disabled>⏹️ 停止流</button>
+        </div>
+        <div id="status" class="status disconnected">📡 状态: 未连接</div>
+        <div class="user-output" id="userOutput">
+            <div class="timestamp">🛠️ 生成的项目信息和文件内容将在这里显示...</div>
+        </div>
+        <div class="output" id="debugOutput">
+            <div class="timestamp">📋 调试信息将在这里显示...</div>
+        </div>
+    </div>
+    <script>
+        let eventSource = null;
+        let startTime = null;
+        let currentMessage = { content: '', element: null, isActive: false };
+        let pendingTextUpdate = '';
+        let updateTimer = null;
+        function generateSessionId() { return 'session_' + Math.random().toString(36).substr(2, 9); }
+        document.getElementById('sessionId').value = generateSessionId();
+        function updateStatus(status, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = `📡 状态: ${message}`;
+        }
+        function appendToDebugOutput(content) {
+            const output = document.getElementById('debugOutput');
+            output.innerHTML += content;
+            output.scrollTop = output.scrollHeight;
+        }
+        function logEvent(type, data) {
+            const timestamp = new Date().toLocaleTimeString();
+            const eventHtml = `<div class="event"><span class="timestamp">[${timestamp}]</span><span class="event-type">${type}</span><div class="event-data">${JSON.stringify(data, null, 2)}</div></div>`;
+            appendToDebugOutput(eventHtml);
+        }
+        function createMessageContainer() {
+            const userOutput = document.getElementById('userOutput');
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'message-container';
+            const messageHeader = document.createElement('div');
+            messageHeader.className = 'message-header';
+            messageHeader.innerHTML = `<span>🛠️ AI Developer</span><span>${new Date().toLocaleTimeString()}</span>`;
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContainer.appendChild(messageHeader);
+            messageContainer.appendChild(messageContent);
+            userOutput.appendChild(messageContainer);
+            return messageContent;
+        }
+        function updateMessageText() {
+            if (currentMessage.element && pendingTextUpdate !== '') {
+                currentMessage.element.textContent = currentMessage.content + pendingTextUpdate;
+                currentMessage.content += pendingTextUpdate;
+                pendingTextUpdate = '';
+                if (currentMessage.isActive) {
+                    const cursor = document.createElement('span');
+                    cursor.className = 'typing-cursor';
+                    currentMessage.element.appendChild(cursor);
+                }
+                document.getElementById('userOutput').scrollTop = document.getElementById('userOutput').scrollHeight;
+            }
+        }
+        function handleTextChunk(content) {
+            if (!currentMessage.element) {
+                currentMessage.element = createMessageContainer();
+                currentMessage.isActive = true;
+            }
+            pendingTextUpdate += content;
+            if (updateTimer) { clearTimeout(updateTimer); }
+            updateTimer = setTimeout(() => { requestAnimationFrame(updateMessageText); }, 16);
+        }
+        function finishMessage() {
+            if (currentMessage.element) {
+                const cursor = currentMessage.element.querySelector('.typing-cursor');
+                if (cursor) { cursor.remove(); }
+                currentMessage.isActive = false;
+            }
+        }
+        function startNewConversation() {
+            document.getElementById('userOutput').innerHTML = '<div class="timestamp">🛠️ 生成的项目信息和文件内容将在这里显示...</div>';
+            currentMessage = { content: '', element: null, isActive: false };
+            pendingTextUpdate = '';
+            if (updateTimer) { clearTimeout(updateTimer); updateTimer = null; }
+        }
+        function sendMessage() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const message = document.getElementById('messageInput').value;
+            const sessionId = document.getElementById('sessionId').value;
+            if (!message.trim()) { alert('请输入项目需求描述'); return; }
+            startTime = Date.now();
+            startNewConversation();
+            document.getElementById('debugOutput').innerHTML = '';
+            logEvent('🚀 开始请求', { url: apiUrl, message: message.substring(0, 100) + (message.length > 100 ? '...' : ''), sessionId });
+            updateStatus('connecting', '正在连接...');
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            const requestData = { message: message, sessionId: sessionId, agentType: "ai_developer" };
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) { throw new Error(`HTTP ${response.status}: ${response.statusText}`); }
+                updateStatus('connected', '已连接，正在接收数据...');
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                function readStream() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            updateStatus('disconnected', '流已结束');
+                            document.getElementById('sendBtn').disabled = false;
+                            document.getElementById('stopBtn').disabled = true;
+                            logEvent('✅ 流结束', {});
+                            finishMessage();
+                            return;
+                        }
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const eventData = line.substring(6);
+                                if (eventData === '[DONE]') { logEvent('🏁 完成信号', {}); continue; }
+                                try {
+                                    const event = JSON.parse(eventData);
+                                    if (event.type === 'text_chunk') {
+                                        const content = event.data?.content || '';
+                                        handleTextChunk(content);
+                                    } else {
+                                        logEvent(`📨 ${event.type}`, event.data);
+                                    }
+                                } catch (e) {
+                                    logEvent('⚠️ 解析错误', { error: e.message, data: eventData });
+                                }
+                            }
+                        }
+                        return readStream();
+                    });
+                }
+                return readStream();
+            })
+            .catch(error => {
+                updateStatus('disconnected', `连接错误: ${error.message}`);
+                logEvent('❌ 错误', { error: error.message });
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                finishMessage();
+            });
+        }
+        function stopStream() {
+            if (eventSource) { eventSource.close(); eventSource = null; }
+            updateStatus('disconnected', '已手动停止');
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            logEvent('⏹️ 手动停止', {});
+            finishMessage();
+        }
+        function clearOutput() {
+            document.getElementById('debugOutput').innerHTML = '<div class="timestamp">📋 调试信息已清空...</div>';
+            document.getElementById('userOutput').innerHTML = '<div class="timestamp">🛠️ 生成的项目信息和文件内容将在这里显示...</div>';
+            startNewConversation();
+        }
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { sendMessage(); }
+        });
+        window.addEventListener('load', function() {
+            appendToDebugOutput(`
+                <div class="timestamp">🎯 使用说明:</div>
+                <div class="event-data">1. 修改API地址（如有需要）</div>
+                <div class="event-data">2. 输入前端项目需求描述</div>
+                <div class="event-data">3. 点击"生成项目"按钮</div>
+                <div class="event-data">4. 在右侧调试区域可查看事件流</div>
+                <div class="event-data">5. 使用 Ctrl+Enter 快捷键发送</div>
+                <div class="timestamp">💡 上方为生成内容，下方为调试信息</div>
+            `);
+        });
+    </script>
+</body>
+</html>
