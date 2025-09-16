@@ -116,8 +116,8 @@ class DeepResearchAgent(BaseAgent):
                                 "domain": r.domain
                             } for r in search_results.results
                         ],
-                        "searchTime": search_results.search_time,
-                        "totalResults": search_results.total_results
+                        "searchTime": search_results.searchTime,
+                        "totalResults": search_results.totalResults
                     }
                 }
             )
@@ -161,7 +161,7 @@ class DeepResearchAgent(BaseAgent):
                         "summary": main_content.summary,
                         "metadata": {
                             "author": main_content.metadata.author if main_content.metadata else None,
-                            "publishDate": main_content.metadata.publish_date if main_content.metadata else None,
+                            "publishDate": main_content.metadata.publishDate if main_content.metadata else None,
                             "description": main_content.metadata.description if main_content.metadata else None,
                             "keywords": main_content.metadata.keywords if main_content.metadata else []
                         } if main_content.metadata else {},

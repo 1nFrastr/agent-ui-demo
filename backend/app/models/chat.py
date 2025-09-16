@@ -25,8 +25,8 @@ class WebSearchData(BaseModel):
     """Web search parameters and results."""
     query: str
     results: List[WebSearchResultItem]
-    search_time: Optional[float] = None
-    total_results: Optional[int] = None
+    searchTime: Optional[float] = None
+    totalResults: Optional[int] = None
 
 
 class ImageInfo(BaseModel):
@@ -40,7 +40,7 @@ class ImageInfo(BaseModel):
 class ContentMetadata(BaseModel):
     """Content metadata."""
     author: Optional[str] = None
-    publish_date: Optional[str] = None
+    publishDate: Optional[str] = None
     description: Optional[str] = None
     keywords: Optional[List[str]] = None
 
@@ -77,8 +77,8 @@ class ToolCallDetails(BaseModel):
     result: Optional[str] = None
     error: Optional[str] = None
     duration: Optional[float] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    startTime: Optional[datetime] = None
+    endTime: Optional[datetime] = None
     description: Optional[str] = None
     icon: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
@@ -113,7 +113,7 @@ class FileContent(BaseModel):
 
 class ToolCallContent(BaseModel):
     """Tool call message content."""
-    tool_call: ToolCallDetails
+    toolCall: ToolCallDetails
 
 
 class MessageContent(BaseModel):
@@ -122,7 +122,7 @@ class MessageContent(BaseModel):
     code: Optional[CodeContent] = None
     image: Optional[ImageContent] = None
     file: Optional[FileContent] = None
-    tool_call: Optional[ToolCallDetails] = None
+    toolCall: Optional[ToolCallDetails] = None
 
 
 class Message(BaseModel):
@@ -140,11 +140,11 @@ class Message(BaseModel):
 
 class ChatConfig(BaseModel):
     """Chat configuration."""
-    show_timestamp: Optional[bool] = True
-    show_avatar: Optional[bool] = True
-    enable_code_highlight: Optional[bool] = True
-    auto_scroll_to_bottom: Optional[bool] = True
-    max_messages: Optional[int] = 1000
+    showTimestamp: Optional[bool] = True
+    showAvatar: Optional[bool] = True
+    enableCodeHighlight: Optional[bool] = True
+    autoScrollToBottom: Optional[bool] = True
+    maxMessages: Optional[int] = 1000
     theme: Optional[Literal["light", "dark", "auto"]] = "auto"
 
 
@@ -153,13 +153,13 @@ class ChatSession(BaseModel):
     id: str
     title: str
     messages: List[Message]
-    created_at: datetime
-    updated_at: datetime
+    createdAt: datetime
+    updatedAt: datetime
     config: Optional[ChatConfig] = None
 
 
 class TypingStatus(BaseModel):
     """Typing status."""
-    is_typing: bool
+    isTyping: bool
     sender: Literal["user", "assistant", "system"]
     preview: Optional[str] = None

@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
+import { ApiChatExample } from '@/components/chat/api-chat-example'
 import { useStreamingChat } from '@/hooks'
-import { Send, MessageCircle, Sparkles, Code2 } from 'lucide-react'
+import { Send, MessageCircle, Sparkles, Code2, Zap } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 // 真正的AICoderPanel组件
@@ -38,6 +39,7 @@ const ToolPanelDemo = () => {
 function App() {
   const [count, setCount] = useState(0)
   const [showChat, setShowChat] = useState(false)
+  const [showApiChat, setShowApiChat] = useState(false)
   const [showToolPanel, setShowToolPanel] = useState(false)
   
   // 使用流式聊天Hook
@@ -95,6 +97,17 @@ export const useCounter = (initialValue: number = 0) => {
       status: 'delivered',
     }
   ]
+
+  if (showApiChat) {
+    return (
+      <div className="h-screen">
+        <ApiChatExample 
+          apiBaseUrl="http://localhost:8000"
+          className="h-full"
+        />
+      </div>
+    )
+  }
 
   if (showToolPanel) {
     return <ToolPanelDemo />
@@ -176,7 +189,7 @@ export const useCounter = (initialValue: number = 0) => {
             <h2 className="text-2xl font-bold mb-2">🚀 对话功能演示</h2>
             <p className="text-muted-foreground">体验实时AI对话，支持Markdown渲染和代码高亮</p>
           </div>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 flex-wrap">
             <Button 
               size="lg" 
               onClick={() => setShowChat(true)}
@@ -187,6 +200,15 @@ export const useCounter = (initialValue: number = 0) => {
             </Button>
             <Button 
               size="lg" 
+              variant="default"
+              onClick={() => setShowApiChat(true)}
+              className="px-8 py-4 text-lg bg-green-600 hover:bg-green-700"
+            >
+              <Zap className="mr-3 h-6 w-6" />
+              API流式对话
+            </Button>
+            <Button 
+              size="lg" 
               variant="outline"
               onClick={() => setShowToolPanel(true)}
               className="px-8 py-4 text-lg"
@@ -194,6 +216,11 @@ export const useCounter = (initialValue: number = 0) => {
               <Code2 className="mr-3 h-6 w-6" />
               编程工具面板
             </Button>
+          </div>
+          <div className="text-center mt-4">
+            <p className="text-sm text-muted-foreground">
+              💡 API流式对话需要后端服务器运行在 localhost:8000
+            </p>
           </div>
         </div>
 

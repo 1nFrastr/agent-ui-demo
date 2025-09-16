@@ -44,8 +44,8 @@ class BaseAgent(ABC):
         return {
             "type": "tool_call_start",
             "data": {
-                "tool_name": tool_name,
-                "tool_id": tool_id,
+                "toolName": tool_name,
+                "toolId": tool_id,
                 "message": message
             }
         }
@@ -61,7 +61,7 @@ class BaseAgent(ABC):
         return {
             "type": "tool_call_end",
             "data": {
-                "tool_id": tool_id,
+                "toolId": tool_id,
                 "status": status,
                 "result": result,
                 "metadata": metadata or {}
@@ -74,7 +74,7 @@ class BaseAgent(ABC):
             "type": "text_chunk",
             "data": {
                 "content": content,
-                "message_id": message_id
+                "messageId": message_id
             }
         }
     
@@ -83,7 +83,7 @@ class BaseAgent(ABC):
         return {
             "type": "message_complete",
             "data": {
-                "message_id": message_id,
+                "messageId": message_id,
                 "content": content
             }
         }

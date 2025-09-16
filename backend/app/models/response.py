@@ -10,6 +10,7 @@ from .chat import Message
 class ChatResponse(BaseModel):
     """Chat response model."""
     messageId: str = Field(..., description="Message ID")
+    sessionId: str = Field(..., description="Session ID")
     content: str = Field(..., description="Response content")
     toolCalls: List[Dict[str, Any]] = Field(default=[], description="Tool calls made")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
@@ -26,14 +27,6 @@ class StreamEvent(BaseModel):
         "error"
     ]
     data: Dict[str, Any]
-
-
-class ChatResponse(BaseModel):
-    """Chat response model."""
-    message_id: str
-    session_id: str
-    response: str
-    metadata: Optional[Dict[str, Any]] = None
 
 
 class ErrorResponse(BaseModel):

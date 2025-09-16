@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from typing import AsyncGenerator
 import json
 import asyncio
+import uuid
 from datetime import datetime, timezone
 
 from app.models.chat import ChatRequest
@@ -98,9 +99,10 @@ async def chat(
         
         # Create response model
         response = ChatResponse(
-            message=response_content,
+            messageId=str(uuid.uuid4()),
             sessionId=request.sessionId,
-            timestamp=datetime.now(timezone.utc).isoformat()
+            content=response_content,
+            timestamp=datetime.now(timezone.utc)
         )
         return response
         

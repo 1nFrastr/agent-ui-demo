@@ -27,7 +27,7 @@ async def test_web_search():
         
         print(f"Query: {result.query}")
         print(f"Results found: {len(result.results)}")
-        print(f"Search time: {result.search_time}ms")
+        print(f"Search time: {result.searchTime}ms")
         print()
         
         for i, item in enumerate(result.results, 1):

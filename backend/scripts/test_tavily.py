@@ -27,7 +27,7 @@ async def test_tavily_search():
         
         print(f"✅ Tavily搜索完成: {execution.status}")
         print(f"📊 找到 {len(execution.result.results)} 个结果")
-        print(f"⏱️  搜索耗时: {execution.result.search_time:.1f}ms")
+        print(f"⏱️  搜索耗时: {execution.result.searchTime:.1f}ms")
         print()
         
         for i, result in enumerate(execution.result.results, 1):
@@ -79,8 +79,8 @@ async def test_deepresearch_with_tavily():
                     result = event['data']['result']
                     if hasattr(result, 'results'):
                         print(f"   📊 搜索结果数: {len(result.results)}")
-                    elif hasattr(result, 'search_time'):
-                        print(f"   ⏱️  搜索耗时: {result.search_time:.1f}ms")
+                    elif hasattr(result, 'searchTime'):
+                        print(f"   ⏱️  搜索耗时: {result.searchTime:.1f}ms")
                         
             elif event_type == "text_chunk":
                 chunk = event['data']['content']

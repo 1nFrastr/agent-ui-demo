@@ -1,3 +1,4 @@
+export * from './api-chat-example'
 export * from './chat-message'
 export * from './message-input'
 export * from './markdown-renderer'

@@ -278,11 +278,11 @@ class WebContentTool(BaseTool):
             element = soup.select_one(selector)
             if element:
                 if element.name == 'meta':
-                    metadata.publish_date = element.get('content')
+                    metadata.publishDate = element.get('content')
                 elif element.name == 'time':
-                    metadata.publish_date = element.get('datetime')
+                    metadata.publishDate = element.get('datetime')
                 else:
-                    metadata.publish_date = element.get_text().strip()
+                    metadata.publishDate = element.get_text().strip()
                 break
         
         return metadata

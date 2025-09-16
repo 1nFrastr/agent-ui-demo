@@ -230,8 +230,8 @@ class LLMService:
             if content.metadata:
                 if content.metadata.author:
                     context += f"- **作者**: {content.metadata.author}\n"
-                if content.metadata.publish_date:
-                    context += f"- **发布时间**: {content.metadata.publish_date}\n"
+                if content.metadata.publishDate:
+                    context += f"- **发布时间**: {content.metadata.publishDate}\n"
                 if content.metadata.description:
                     context += f"- **描述**: {content.metadata.description}\n"
             

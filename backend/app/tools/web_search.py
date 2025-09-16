@@ -130,8 +130,8 @@ class WebSearchTool(BaseTool):
             return WebSearchData(
                 query=query,
                 results=results,
-                search_time=search_time,
-                total_results=len(results) * 1000,  # Estimate based on Tavily's corpus
+                searchTime=search_time,
+                totalResults=len(results) * 1000,  # Estimate based on Tavily's corpus
             )
             
         except Exception as e:
