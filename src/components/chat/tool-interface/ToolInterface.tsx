@@ -82,19 +82,21 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({
   // 普通场景：显示工具详情面板
   return (
     <div className={cn(
-      'ease-in-out overflow-hidden border-l border-border',
+      'ease-in-out overflow-hidden border-l border-border h-full',
       isOpen 
         ? 'w-2/3 opacity-100 transition-all duration-300'
         : 'w-0 opacity-0 transition-all duration-500',
       className
     )}>
-      <ToolDetailsPanel
-        messageId={selectedToolMessageId || null}
-        messages={messages}
-        isOpen={isOpen}
-        onClose={onClose}
-        className="w-full"
-      />
+      {isOpen && (
+        <ToolDetailsPanel
+          messageId={selectedToolMessageId || null}
+          messages={messages}
+          isOpen={isOpen}
+          onClose={onClose}
+          className="w-full h-full"
+        />
+      )}
     </div>
   )
 }

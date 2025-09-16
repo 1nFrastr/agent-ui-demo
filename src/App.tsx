@@ -4,7 +4,7 @@ import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
 import { ApiChatExample } from '@/components/chat/api-chat-example'
 import { useStreamingChat } from '@/hooks'
-import { Send, MessageCircle, Sparkles, Code2, Zap } from 'lucide-react'
+import { MessageCircle, Sparkles, Code2, Zap } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 // 真正的AICoderPanel组件
@@ -37,7 +37,6 @@ const ToolPanelDemo = () => {
 }
 
 function App() {
-  const [count, setCount] = useState(0)
   const [showChat, setShowChat] = useState(false)
   const [showApiChat, setShowApiChat] = useState(false)
   const [showToolPanel, setShowToolPanel] = useState(false)
@@ -141,47 +140,6 @@ export const useCounter = (initialValue: number = 0) => {
             基于 React + Vite + TailwindCSS + Radix UI 构建
           </p>
         </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <div className="space-y-4 p-6 border border-border rounded-lg bg-card">
-            <h3 className="text-lg font-semibold">基础按钮</h3>
-            <div className="space-y-3">
-              <Button onClick={() => setCount(count + 1)}>
-                计数: {count}
-              </Button>
-              <Button variant="secondary">次要按钮</Button>
-              <Button variant="outline">轮廓按钮</Button>
-            </div>
-          </div>
-
-          <div className="space-y-4 p-6 border border-border rounded-lg bg-card">
-            <h3 className="text-lg font-semibold">带图标按钮</h3>
-            <div className="space-y-3">
-              <Button>
-                <Send className="mr-2 h-4 w-4" />
-                发送消息
-              </Button>
-              <Button variant="ghost" onClick={() => setShowChat(true)}>
-                <MessageCircle className="mr-2 h-4 w-4" />
-                开始对话
-              </Button>
-              <Button variant="destructive">
-                <Sparkles className="mr-2 h-4 w-4" />
-                清空对话
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-4 p-6 border border-border rounded-lg bg-card">
-            <h3 className="text-lg font-semibold">按钮状态</h3>
-            <div className="space-y-3">
-              <Button loading>加载中...</Button>
-              <Button disabled>禁用状态</Button>
-              <Button size="sm">小尺寸</Button>
-              <Button size="lg">大尺寸</Button>
-            </div>
-          </div>
-        </div>
 
         {/* 流式对话演示入口 */}
         <div className="mb-8">

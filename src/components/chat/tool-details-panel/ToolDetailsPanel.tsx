@@ -271,9 +271,9 @@ export const ToolDetailsPanel: React.FC<ToolDetailsPanelProps> = ({
   }
 
   return (
-    <div className={cn('h-full bg-background', className)}>
+    <div className={cn('h-full flex flex-col bg-background', className)}>
       {/* 头部 */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <ToolIcon className="h-5 w-5 text-primary" />
@@ -294,8 +294,8 @@ export const ToolDetailsPanel: React.FC<ToolDetailsPanelProps> = ({
         </Button>
       </div>
 
-      {/* 内容区域 */}
-      <div className="p-4 overflow-y-auto">
+      {/* 内容区域 - 添加明确的高度限制和滚动 */}
+      <div className="flex-1 min-h-0 p-4 overflow-y-auto">
         {/* 基本信息 */}
         <div className="mb-6">
           <h4 className="font-medium mb-3">基本信息</h4>
