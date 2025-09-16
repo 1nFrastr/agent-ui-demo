@@ -116,7 +116,7 @@ class AIDeveloperAgent(BaseAgent):
                 # 开始生成文件
                 file_tool_id = str(uuid.uuid4())
                 yield self.create_tool_start_event(
-                    f"code_generator_{file_type}",
+                    f"code_generator",
                     f"正在生成{file_name}文件...",
                     file_tool_id
                 )
