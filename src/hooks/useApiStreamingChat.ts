@@ -85,8 +85,8 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
 
   // EventSource连接引用
   const eventSourceRef = useRef<EventSource | null>(null)
-  // 当前流式消息引用
-  const currentStreamingMessageRef = useRef<string | null>(null)
+  // 当前流式消息引用 - 支持多个并发流式消息
+  const currentStreamingMessagesRef = useRef<Set<string>>(new Set())
   // 重试计数器
   const retryCountRef = useRef<number>(0)
   // 最后一条用户消息（用于重试）
@@ -102,15 +102,16 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
     }
     
     // 如果有正在流式传输的消息，标记为完成
-    if (currentStreamingMessageRef.current) {
+    const streamingMessages = currentStreamingMessagesRef.current
+    if (streamingMessages.size > 0) {
       setMessages(prev => 
         prev.map(msg => 
-          msg.id === currentStreamingMessageRef.current
+          streamingMessages.has(msg.id)
             ? { ...msg, status: 'delivered' as MessageStatus }
             : msg
         )
       )
-      currentStreamingMessageRef.current = null
+      currentStreamingMessagesRef.current.clear()
     }
     
     setIsLoading(false)
@@ -190,16 +191,18 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
    */
   const handleTextChunk = useCallback((eventData: Record<string, unknown>) => {
     const messageId = eventData.messageId as string
+    const content = eventData.content as string
     
-    // 如果是新的流式消息，创建消息
-    if (!currentStreamingMessageRef.current) {
-      currentStreamingMessageRef.current = messageId
+    // 检查是否是新的流式消息
+    if (!currentStreamingMessagesRef.current.has(messageId)) {
+      // 添加到流式消息集合
+      currentStreamingMessagesRef.current.add(messageId)
       
       const textMessage: Message = {
         id: messageId,
         sender: 'assistant',
         type: 'text',
-        content: { text: eventData.content as string },
+        content: { text: content },
         timestamp: new Date(),
         status: 'pending'
       }
@@ -212,7 +215,7 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
           msg.id === messageId
             ? { 
                 ...msg, 
-                content: { text: (msg.content.text || '') + (eventData.content as string) }
+                content: { text: (msg.content.text || '') + content }
               }
             : msg
         )
@@ -238,9 +241,14 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
       )
     )
     
-    currentStreamingMessageRef.current = null
-    setIsLoading(false)
-    retryCountRef.current = 0 // 重置重试计数
+    // 从流式消息集合中移除完成的消息
+    currentStreamingMessagesRef.current.delete(messageId)
+    
+    // 如果所有流式消息都完成了，结束加载状态
+    if (currentStreamingMessagesRef.current.size === 0) {
+      setIsLoading(false)
+      retryCountRef.current = 0 // 重置重试计数
+    }
   }, [])
 
   /**
@@ -253,15 +261,16 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
     setIsConnecting(false)
     
     // 如果有正在进行的流式消息，标记为失败
-    if (currentStreamingMessageRef.current) {
+    const streamingMessages = currentStreamingMessagesRef.current
+    if (streamingMessages.size > 0) {
       setMessages(prev => 
         prev.map(msg => 
-          msg.id === currentStreamingMessageRef.current
+          streamingMessages.has(msg.id)
             ? { ...msg, status: 'failed' as MessageStatus }
             : msg
         )
       )
-      currentStreamingMessageRef.current = null
+      currentStreamingMessagesRef.current.clear()
     }
   }, [])
 
@@ -323,7 +332,7 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
               
               if (data === '[DONE]') {
                 setIsLoading(false)
-                currentStreamingMessageRef.current = null
+                currentStreamingMessagesRef.current.clear()
                 return
               }
 
@@ -342,7 +351,13 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
                     break
                   case 'message_complete':
                     handleMessageComplete(event.data)
-                    return // 消息完成，结束处理
+                    break
+                  case 'session_end':
+                    // 会话结束，强制设置加载状态为false
+                    setIsLoading(false)
+                    currentStreamingMessagesRef.current.clear()
+                    console.log('Session ended:', event.data)
+                    return
                   case 'error':
                     handleError(event.data)
                     return

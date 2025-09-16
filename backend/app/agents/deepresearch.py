@@ -91,6 +91,13 @@ class DeepResearchAgent(BaseAgent):
                 {"plan": f"制定了针对「{message}」的研究计划"}
             )
             
+            # 承上启下的说明文字
+            planning_message_id = self.generate_message_id()
+            yield self.create_text_chunk_event(
+                f"✅ 我已完成对「{message}」的研究计划制定。现在让我开始进行网络搜索，寻找相关信息...\n\n",
+                planning_message_id
+            )
+            
             # Step 2: Web Search
             search_tool_id = str(uuid.uuid4())
             yield self.create_tool_start_event(
@@ -121,6 +128,13 @@ class DeepResearchAgent(BaseAgent):
                         "totalResults": search_results.totalResults
                     }
                 }
+            )
+            
+            # 承上启下的说明文字
+            search_message_id = self.generate_message_id()
+            yield self.create_text_chunk_event(
+                f"🔍 我已完成网络搜索，找到了 {len(search_results.results)} 个相关结果。现在让我读取这些网页的详细内容，以获取更深入的信息...\n\n",
+                search_message_id
             )
             
             # Step 3: Content Extraction
@@ -177,6 +191,13 @@ class DeepResearchAgent(BaseAgent):
                 content_metadata
             )
             
+            # 承上启下的说明文字
+            content_message_id = self.generate_message_id()
+            yield self.create_text_chunk_event(
+                f"📄 我已成功读取网页内容，获得了丰富的详细信息。现在让我基于这些搜索结果和网页内容进行AI智能分析，为您提供深度洞察...\n\n",
+                content_message_id
+            )
+            
             # Step 4: LLM-Powered Analysis with Streaming
             analysis_message_id = self.generate_message_id()
             
@@ -211,6 +232,15 @@ class DeepResearchAgent(BaseAgent):
             )
             
             yield self.create_message_complete_event(analysis_message_id, full_analysis)
+            
+            # 发送流结束事件
+            yield {
+                "type": "session_end",
+                "data": {
+                    "sessionId": session_id,
+                    "message": "对话流处理完成"
+                }
+            }
             
             self.logger.info(f"Research completed for query: {message}")
             
