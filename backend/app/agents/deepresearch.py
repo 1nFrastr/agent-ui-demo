@@ -11,7 +11,7 @@ from app.agents.base import BaseAgent
 from app.tools.registry import tool_registry
 from app.tools.web_search import WebSearchTool
 from app.tools.web_content import WebContentTool
-from app.services.llm_service import get_llm_service
+from app.services.llm_service import get_llm_service, get_llm_service_async
 from app.config import settings
 from app.core.exceptions import AgentExecutionError
 
@@ -26,6 +26,7 @@ class DeepResearchAgent(BaseAgent):
         super().__init__("DeepResearchAgent")
         self.web_search_tool = WebSearchTool()
         self.web_content_tool = WebContentTool()
+        # 使用同步方式初始化，在应用启动时调用
         self.llm_service = get_llm_service()
         # 创建共享的HTTP客户端用于真正的并行处理
         self._shared_client = None

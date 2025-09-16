@@ -41,7 +41,11 @@ class LLMService:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
+        # 记录初始化开始时间
+        init_start = asyncio.get_event_loop().time() if asyncio.get_event_loop().is_running() else 0
+        
         # Configure LangSmith tracing if enabled
+        self.logger.info("🔧 Configuring LangSmith tracing...")
         self._configure_langsmith_tracing()
         
         if not settings.openai_api_key:
@@ -51,6 +55,7 @@ class LLMService:
             )
         
         # Initialize LangChain ChatOpenAI
+        self.logger.info("🤖 Initializing ChatOpenAI client...")
         self.llm = ChatOpenAI(
             model=settings.openai_model,
             api_key=settings.openai_api_key,
@@ -61,7 +66,15 @@ class LLMService:
         )
         
         # Initialize LangSmith client for additional monitoring
+        self.logger.info("📊 Initializing LangSmith client...")
         self.langsmith_client = self._init_langsmith_client()
+        
+        # 记录初始化完成时间
+        if init_start > 0:
+            duration = asyncio.get_event_loop().time() - init_start
+            self.logger.info(f"✅ LLMService initialization completed in {duration:.2f}s")
+        else:
+            self.logger.info("✅ LLMService initialization completed")
     
     def _configure_langsmith_tracing(self):
         """Configure LangSmith environment variables for tracing."""
@@ -293,11 +306,43 @@ class LLMService:
 
 # Global LLM service instance  
 _llm_service: Optional[LLMService] = None
+_initialization_lock = asyncio.Lock()
 
 
 def get_llm_service() -> LLMService:
-    """Get or create LLM service instance."""
+    """Get or create LLM service instance with improved initialization."""
     global _llm_service
+    
     if _llm_service is None:
+        logger.info("🔄 Creating new LLM service instance...")
+        start_time = asyncio.get_event_loop().time() if asyncio.get_event_loop().is_running() else 0
+        
         _llm_service = LLMService()
+        
+        if start_time > 0:
+            duration = asyncio.get_event_loop().time() - start_time
+            logger.info(f"⚡ LLM service created in {duration:.2f}s")
+        else:
+            logger.info("⚡ LLM service created successfully")
+    
+    return _llm_service
+
+
+async def get_llm_service_async() -> LLMService:
+    """Get or create LLM service instance with async initialization and locking."""
+    global _llm_service
+    
+    if _llm_service is None:
+        async with _initialization_lock:
+            if _llm_service is None:  # Double-check pattern
+                logger.info("🔄 Async creating new LLM service instance...")
+                start_time = asyncio.get_event_loop().time()
+                
+                # Run the sync initialization in a thread pool
+                loop = asyncio.get_event_loop()
+                _llm_service = await loop.run_in_executor(None, LLMService)
+                
+                duration = asyncio.get_event_loop().time() - start_time
+                logger.info(f"⚡ LLM service async created in {duration:.2f}s")
+    
     return _llm_service

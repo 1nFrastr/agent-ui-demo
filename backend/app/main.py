@@ -16,12 +16,40 @@ from app.core.logging import setup_logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager."""
+    """Application lifespan manager with service pre-warming."""
     # Startup
     setup_logging()
     logger = logging.getLogger(__name__)
     logger.info(f"Starting {settings.app_name} v{settings.version}")
     logger.info(f"Debug mode: {settings.debug}")
+    
+    # 🔥 预初始化关键服务以避免第一次请求的冷启动延迟
+    try:
+        logger.info("🚀 Pre-warming critical services...")
+        
+        # 预初始化LLM服务
+        logger.info("Initializing LLM service...")
+        from app.services.llm_service import get_llm_service
+        llm_service = get_llm_service()
+        logger.info("✅ LLM service pre-warmed successfully")
+        
+        # 预初始化DeepResearch Agent
+        logger.info("Initializing DeepResearch agent...")
+        from app.agents.deepresearch import DeepResearchAgent
+        agent = DeepResearchAgent()
+        logger.info("✅ DeepResearch agent pre-warmed successfully")
+        
+        # 预初始化工具注册表
+        logger.info("Initializing tool registry...")
+        from app.tools.registry import tool_registry
+        logger.info("✅ Tool registry pre-warmed successfully")
+        
+        logger.info("🎉 All critical services pre-warmed, ready for requests!")
+        
+    except Exception as e:
+        logger.error(f"❌ Service pre-warming failed: {e}", exc_info=True)
+        # 不要因为预热失败而阻止应用启动
+        logger.warning("⚠️  Application will continue without pre-warming")
     
     yield
     
