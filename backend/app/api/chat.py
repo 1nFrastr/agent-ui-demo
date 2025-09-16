@@ -21,6 +21,9 @@ class ChatRequest(BaseModel):
     """Chat request model."""
     message: str
     session_id: Optional[str] = None
+    sessionId: Optional[str] = None  # 兼容前端的camelCase
+    agent_type: Optional[str] = None
+    agentType: Optional[str] = None  # 兼容前端的camelCase
     config: Optional[Dict[str, Any]] = None
 
 
@@ -46,7 +49,13 @@ async def send_message(
         
         # Generate IDs
         message_id = str(uuid.uuid4())
-        session_id = request.session_id or str(uuid.uuid4())
+        session_id = request.session_id or request.sessionId or str(uuid.uuid4())
+        
+        # Prepare config
+        config = request.config or {}
+        agent_type = request.agent_type or request.agentType
+        if agent_type:
+            config['agent_type'] = agent_type
         
         # Initialize chat service
         chat_service = ChatService(settings)
@@ -55,7 +64,7 @@ async def send_message(
         response = await chat_service.process_message(
             message=request.message,
             session_id=session_id,
-            config=request.config or {}
+            config=config
         )
         
         return ChatResponse(
@@ -92,7 +101,13 @@ async def stream_chat(
             raise ValidationError("Message cannot be empty")
         
         # Generate IDs
-        session_id = request.session_id or str(uuid.uuid4())
+        session_id = request.session_id or request.sessionId or str(uuid.uuid4())
+        
+        # Prepare config
+        config = request.config or {}
+        agent_type = request.agent_type or request.agentType
+        if agent_type:
+            config['agent_type'] = agent_type
         
         # Initialize chat service
         chat_service = ChatService(settings)
@@ -105,7 +120,7 @@ async def stream_chat(
                 async for event in chat_service.stream_response(
                     message=request.message,
                     session_id=session_id,
-                    config=request.config or {}
+                    config=config
                 ):
                     # Format as server-sent event
                     event_data = json.dumps(event, ensure_ascii=False)

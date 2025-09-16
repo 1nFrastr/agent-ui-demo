@@ -35,7 +35,7 @@ class CodeGeneratorTool(BaseTool):
 6. 包含必要的表单或交互元素
 7. 使用合适的标题层级
 
-请生成完整的HTML代码，文件名为index.html：
+请只返回完整的HTML代码，不要包含任何解释文字或markdown格式：
 """
 
         self.css_prompt_template = """作为一个专业的CSS开发工程师，请为以下HTML结构生成对应的CSS样式：
@@ -55,7 +55,7 @@ HTML结构：
 7. 使用合理的颜色方案和字体搭配
 8. 添加适当的阴影和圆角效果
 
-请生成完整的CSS代码，文件名为style.css：
+请只返回完整的CSS代码，不要包含任何解释文字或markdown格式：
 """
 
         self.js_prompt_template = """作为一个专业的JavaScript开发工程师，请为以下项目生成交互逻辑：
@@ -68,6 +68,12 @@ CSS样式：
 
 项目描述：{project_description}
 
+特别注意：
+- JavaScript代码将在iframe中作为单独文件执行
+- 不需要包裹DOMContentLoaded、window.onload等生命周期事件
+- iframe通用层已经处理了生命周期，直接编写响应逻辑即可
+- 可以直接使用document.querySelector等DOM操作
+
 要求：
 1. 使用现代JavaScript语法（ES6+）
 2. 良好的代码组织和注释
@@ -77,8 +83,9 @@ CSS样式：
 6. 表单验证和数据处理
 7. 动态内容更新和DOM操作
 8. 响应式交互支持
+9. 直接编写执行代码，无需事件监听器包装
 
-请生成完整的JavaScript代码，文件名为script.js：
+请只返回完整的JavaScript代码，不要包含任何解释文字或markdown格式：
 """
     
     @property
@@ -277,52 +284,82 @@ CSS样式：
         if not content:
             return ""
         
-        # 移除可能的markdown代码块标记
-        if content.startswith("```"):
-            lines = content.split('\n')
-            # 找到第一个非```行作为开始
-            start_idx = 0
-            for i, line in enumerate(lines):
-                if not line.startswith("```") and line.strip():
-                    start_idx = i
-                    break
-            
-            # 找到最后一个非```行作为结束
-            end_idx = len(lines) - 1
-            for i in range(len(lines) - 1, -1, -1):
-                if not lines[i].startswith("```") and lines[i].strip():
-                    end_idx = i
-                    break
-            
-            content = '\n'.join(lines[start_idx:end_idx + 1])
-        
         # 移除首尾空白
         content = content.strip()
         
-        # 特定类型的清理
+        # 移除markdown代码块标记 - 更强健的处理
+        lines = content.split('\n')
+        cleaned_lines = []
+        skip_until_closing = False
+        
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            
+            # 检测代码块开始标记
+            if line_stripped.startswith("```"):
+                if not skip_until_closing:
+                    # 这是开始标记，跳过
+                    skip_until_closing = True
+                    continue
+                else:
+                    # 这是结束标记，跳过并停止跳过
+                    skip_until_closing = False
+                    continue
+            
+            # 如果不在跳过模式，添加这一行
+            if not skip_until_closing:
+                cleaned_lines.append(line)
+        
+        content = '\n'.join(cleaned_lines).strip()
+        
+        # 移除常见的提示词残留
+        content = content.replace("以下是生成的代码：", "")
+        content = content.replace("代码如下：", "")
+        content = content.replace("HTML代码：", "")
+        content = content.replace("CSS代码：", "")
+        content = content.replace("JavaScript代码：", "")
+        content = content.replace("以下是完整的", "")
+        
+        # 特定类型的清理和验证
         if file_type == "html":
             # 确保HTML有基本结构
-            if not content.startswith("<!DOCTYPE"):
+            if not content.lower().startswith("<!doctype"):
                 self.logger.warning("Generated HTML missing DOCTYPE, adding basic structure")
-                content = f"<!DOCTYPE html>\n{content}"
+                if not content.lower().startswith("<html"):
+                    content = f"<!DOCTYPE html>\n<html>\n{content}\n</html>"
+                else:
+                    content = f"<!DOCTYPE html>\n{content}"
         
         elif file_type == "css":
-            # 移除可能的CSS注释中的提示词残留
-            content = content.replace("CSS代码：", "").replace("css", "").strip()
-            if content.startswith("```"):
-                content = content[3:].strip()
-            if content.endswith("```"):
-                content = content[:-3].strip()
+            # 移除CSS相关的说明文字
+            if content.startswith("这是"):
+                lines = content.split('\n')
+                # 找到第一行实际CSS代码
+                for i, line in enumerate(lines):
+                    if '{' in line or line.strip().startswith('.') or line.strip().startswith('#') or line.strip().startswith('*'):
+                        content = '\n'.join(lines[i:])
+                        break
         
         elif file_type == "js":
-            # 移除可能的JS注释中的提示词残留
-            content = content.replace("JavaScript代码：", "").replace("javascript", "").strip()
-            if content.startswith("```"):
-                content = content[3:].strip()
-            if content.endswith("```"):
-                content = content[:-3].strip()
+            # 移除JavaScript相关的说明文字
+            if content.startswith("这是") or content.startswith("以下"):
+                lines = content.split('\n')
+                # 找到第一行实际JS代码
+                for i, line in enumerate(lines):
+                    line_stripped = line.strip()
+                    if (line_stripped.startswith('//') or 
+                        line_stripped.startswith('/*') or 
+                        line_stripped.startswith('function') or
+                        line_stripped.startswith('const') or
+                        line_stripped.startswith('let') or
+                        line_stripped.startswith('var') or
+                        line_stripped.startswith('document') or
+                        line_stripped.startswith('window') or
+                        '{' in line_stripped):
+                        content = '\n'.join(lines[i:])
+                        break
         
-        return content
+        return content.strip()
     
     async def generate_file_stream(self, file_type: str, project_description: str, 
                                  context: Dict[str, Any] = None) -> AsyncGenerator[str, None]:

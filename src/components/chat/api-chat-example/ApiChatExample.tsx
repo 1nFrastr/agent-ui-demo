@@ -14,12 +14,18 @@ interface ApiChatExampleProps {
   sessionId?: string
   /** 自定义样式类名 */
   className?: string
+  /** 代理类型 */
+  agentType?: string
+  /** 输入框占位符 */
+  placeholder?: string
 }
 
 export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
   apiBaseUrl = 'http://localhost:8000',
   sessionId,
-  className
+  className,
+  agentType = 'deepresearch',
+  placeholder = '输入消息开始对话...'
 }) => {
   const {
     messages,
@@ -33,7 +39,8 @@ export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
   } = useApiStreamingChat({
     baseUrl: apiBaseUrl,
     defaultSessionId: sessionId,
-    maxRetries: 3
+    maxRetries: 3,
+    agentType: agentType
   })
 
   const handleSendMessage = async (content: string) => {
@@ -111,7 +118,7 @@ export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
         onStop={handleStop}
         onClearChat={handleClearChat}
         enableMarkdown={true}
-        placeholder="请输入您想要研究的问题，我可以帮您搜索信息、分析内容..."
+        placeholder={placeholder}
         theme="light"
       />
     </div>

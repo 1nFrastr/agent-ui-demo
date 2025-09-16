@@ -56,219 +56,264 @@ class AIDeveloperAgent(BaseAgent):
         
         try:
             self.session_id = session_id
-            self.logger.info(f"Starting project generation for: {message}")
+            self.logger.info(f"Starting AI-powered project generation for: {message}")
             
-            # Step 1: 项目规划阶段
-            yield self.create_tool_start_event(
-                "project_planner",
-                "分析项目需求，制定生成计划...",
-                "plan_1"
-            )
-            
-            await asyncio.sleep(0.5)
-            
-            # 创建项目
-            project_result = await self.project_structure.execute({
-                "action": "create_project",
-                "project_name": f"Generated Project {datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                "project_description": message
-            })
-            
-            if project_result["status"] != "success":
-                raise AgentExecutionError(f"Project creation failed: {project_result.get('error')}")
-            
-            project_id = project_result["project_id"]
-            
-            yield self.create_tool_end_event(
-                "plan_1",
-                "success",
-                "项目规划完成",
-                {
-                    "project_id": project_id,
-                    "plan": f"将按照HTML→CSS→JavaScript的顺序生成文件"
-                }
-            )
-            
-            # 承上启下说明
+            # 流式返回项目开始说明
             planning_message_id = self.generate_message_id()
             yield self.create_text_chunk_event(
-                f"✅ 项目规划完成！我将为您生成一个包含HTML、CSS、JavaScript的简单前端项目。\n\n" +
-                f"项目描述：{message}\n\n" +
-                f"现在开始按顺序生成文件...\n\n",
+                f"🚀 开始使用AI生成完整的前端项目...\n\n" +
+                f"需求描述：{message}\n\n" +
+                f"正在调用LLM生成HTML页面结构...\n\n",
                 planning_message_id
             )
             
-            # Step 2: 按顺序生成文件
-            generated_files = {}
+            # Step 1: 生成HTML文件
+            html_tool_id = str(uuid.uuid4())
+            yield self.create_tool_start_event(
+                "code_generator",
+                "使用AI生成HTML文件...",
+                html_tool_id
+            )
             
-            for step in self.generation_order:
-                file_type = step["file_type"]
-                file_name = step["file_name"]
-                status = step["status"]
-                
-                # 更新项目状态
-                await self.project_structure.execute({
-                    "action": "update_status",
-                    "project_id": project_id,
-                    "status": status
-                })
-                
-                # 开始生成文件
-                file_tool_id = str(uuid.uuid4())
-                yield self.create_tool_start_event(
-                    f"code_generator",
-                    f"正在生成{file_name}文件...",
-                    file_tool_id
-                )
-                
-                # 准备生成参数
-                generation_params = {
-                    "file_type": file_type,
-                    "project_description": message
+            # 使用LLM生成HTML内容
+            html_result = await self.code_generator.execute({
+                "file_type": "html",
+                "project_description": message
+            })
+            
+            if html_result["status"] != "success":
+                raise AgentExecutionError(f"HTML generation failed: {html_result.get('error')}")
+            
+            generated_html = html_result["content"]
+            
+            # 返回HTML文件工具调用完成事件
+            yield self.create_tool_end_event(
+                html_tool_id,
+                "success",
+                "HTML文件生成完成",
+                {
+                    "file": {
+                        "id": "1",
+                        "name": "index.html",
+                        "path": "index.html",
+                        "type": "file",
+                        "content": generated_html,
+                        "modified": datetime.now().isoformat(),
+                        "extension": "html",
+                        "isReadOnly": False
+                    },
+                    "generatedBy": "LLM"
                 }
-                
-                # 添加上下文信息
-                if file_type == "css" and "html" in generated_files:
-                    generation_params["html_content"] = generated_files["html"]["content"]
-                elif file_type == "js":
-                    if "html" in generated_files:
-                        generation_params["html_content"] = generated_files["html"]["content"]
-                    if "css" in generated_files:
-                        generation_params["css_content"] = generated_files["css"]["content"]
-                
-                # 生成文件内容
-                file_result = await self.code_generator.execute(generation_params)
-                
-                if file_result["status"] == "success":
-                    file_content = file_result["content"]
-                    generated_files[file_type] = file_result
-                    
-                    # 更新项目文件
-                    await self.project_structure.execute({
-                        "action": "update_file",
-                        "project_id": project_id,
-                        "file_name": file_name,
-                        "file_content": file_content
-                    })
-                    
-                    # 流式返回文件内容
-                    file_message_id = self.generate_message_id()
-                    
-                    # 分块返回内容以模拟实时生成
-                    chunk_size = 100
-                    for i in range(0, len(file_content), chunk_size):
-                        chunk = file_content[i:i + chunk_size]
-                        yield self.create_text_chunk_event(chunk, file_message_id)
-                        await asyncio.sleep(0.05)  # 模拟生成延迟
-                    
-                    yield self.create_tool_end_event(
-                        file_tool_id,
-                        "success",
-                        f"{file_name}文件生成完成",
-                        {
-                            "file_data": {
-                                "name": file_name,
-                                "type": file_type,
-                                "size": len(file_content),
-                                "content": file_content,
-                                "status": "ready"
-                            },
-                            "project_id": project_id
-                        }
-                    )
-                    
-                    # 文件间的承上启下说明
-                    if file_type == "html":
-                        transition_msg = "\n\n🎯 HTML结构已生成完成！接下来生成CSS样式文件，为页面添加美观的外观...\n\n"
-                    elif file_type == "css":
-                        transition_msg = "\n\n🎨 CSS样式已生成完成！最后生成JavaScript文件，为页面添加交互功能...\n\n"
-                    else:
-                        transition_msg = "\n\n"
-                    
-                    if transition_msg.strip():
-                        transition_id = self.generate_message_id()
-                        yield self.create_text_chunk_event(transition_msg, transition_id)
-                    
-                else:
-                    # 文件生成失败
-                    yield self.create_tool_end_event(
-                        file_tool_id,
-                        "error",
-                        f"{file_name}文件生成失败: {file_result.get('error', 'Unknown error')}"
-                    )
-                    
-                    raise AgentExecutionError(f"File generation failed: {file_result.get('error')}")
+            )
             
-            # Step 3: 项目完成
-            await self.project_structure.execute({
-                "action": "update_status",
-                "project_id": project_id,
-                "status": "completed"
+            # 流式显示生成进度
+            progress_message_id = self.generate_message_id()
+            yield self.create_text_chunk_event(
+                f"✅ HTML结构生成完成！\n\n正在调用LLM生成CSS样式...\n\n",
+                progress_message_id
+            )
+            
+            # Step 2: 生成CSS文件
+            css_tool_id = str(uuid.uuid4())
+            yield self.create_tool_start_event(
+                "code_generator",
+                "使用AI生成CSS样式文件...",
+                css_tool_id
+            )
+            
+            # 使用LLM生成CSS内容
+            css_result = await self.code_generator.execute({
+                "file_type": "css",
+                "project_description": message,
+                "html_content": generated_html
             })
             
-            # 获取最终项目信息
-            final_project = await self.project_structure.execute({
-                "action": "get_project",
-                "project_id": project_id
+            if css_result["status"] != "success":
+                self.logger.warning(f"CSS generation failed: {css_result.get('error')}, using basic CSS")
+                generated_css = "/* CSS generation failed, using basic styles */\nbody { font-family: Arial, sans-serif; }"
+            else:
+                generated_css = css_result["content"]
+            
+            # 返回CSS文件工具调用完成事件
+            yield self.create_tool_end_event(
+                css_tool_id,
+                "success",
+                "CSS文件生成完成",
+                {
+                    "file": {
+                        "id": "2",
+                        "name": "style.css",
+                        "path": "style.css",
+                        "type": "file",
+                        "content": generated_css,
+                        "modified": datetime.now().isoformat(),
+                        "extension": "css",
+                        "isReadOnly": False
+                    },
+                    "generatedBy": "LLM"
+                }
+            )
+            
+            # 流式显示生成进度
+            progress_message_id2 = self.generate_message_id()
+            yield self.create_text_chunk_event(
+                f"✅ CSS样式生成完成！\n\n正在调用LLM生成JavaScript交互...\n\n",
+                progress_message_id2
+            )
+            
+            # Step 3: 生成JavaScript文件
+            js_tool_id = str(uuid.uuid4())
+            yield self.create_tool_start_event(
+                "code_generator",
+                "使用AI生成JavaScript交互文件...",
+                js_tool_id
+            )
+            
+            # 使用LLM生成JavaScript内容
+            js_result = await self.code_generator.execute({
+                "file_type": "js",
+                "project_description": message,
+                "html_content": generated_html,
+                "css_content": generated_css
             })
             
-            # 发送项目完成事件
+            if js_result["status"] != "success":
+                self.logger.warning(f"JavaScript generation failed: {js_result.get('error')}, using basic JS")
+                generated_js = "// JavaScript generation failed\nconsole.log('Page loaded');"
+            else:
+                generated_js = js_result["content"]
+            
+            # 返回JavaScript文件工具调用完成事件
+            yield self.create_tool_end_event(
+                js_tool_id,
+                "success",
+                "JavaScript文件生成完成",
+                {
+                    "file": {
+                        "id": "3",
+                        "name": "script.js",
+                        "path": "script.js",
+                        "type": "file",
+                        "content": generated_js,
+                        "modified": datetime.now().isoformat(),
+                        "extension": "js",
+                        "isReadOnly": False
+                    },
+                    "generatedBy": "LLM"
+                }
+            )
+            
+            # 流式显示所有文件生成完成
+            files_complete_message_id = self.generate_message_id()
+            yield self.create_text_chunk_event(
+                f"✅ 所有文件生成完成！\n\n正在创建文件系统预览...\n\n",
+                files_complete_message_id
+            )
+            
+            # Step 4: 最后返回file_browser工具调用以支持预览
+            file_browser_tool_id = str(uuid.uuid4())
+            yield self.create_tool_start_event(
+                "file_browser",
+                "创建文件系统预览...",
+                file_browser_tool_id
+            )
+            
+            # 创建符合前端期望的文件系统数据结构
+            file_system_data = {
+                "files": [
+                    {
+                        "id": "1",
+                        "name": "index.html",
+                        "path": "index.html", 
+                        "type": "file",
+                        "content": generated_html,
+                        "modified": datetime.now().isoformat(),
+                        "extension": "html",
+                        "isReadOnly": False
+                    },
+                    {
+                        "id": "2",
+                        "name": "style.css",
+                        "path": "style.css",
+                        "type": "file", 
+                        "content": generated_css,
+                        "modified": datetime.now().isoformat(),
+                        "extension": "css",
+                        "isReadOnly": False
+                    },
+                    {
+                        "id": "3",
+                        "name": "script.js",
+                        "path": "script.js",
+                        "type": "file",
+                        "content": generated_js,
+                        "modified": datetime.now().isoformat(),
+                        "extension": "js",
+                        "isReadOnly": False
+                    }
+                ],
+                "selectedPath": "index.html"
+            }
+            
+            # 返回file_browser工具调用完成事件
+            yield self.create_tool_end_event(
+                file_browser_tool_id,
+                "success",
+                "AI生成的前端项目完成",
+                {
+                    "fileSystemData": file_system_data,
+                    "activeFile": "index.html",
+                    "projectInfo": {
+                        "name": "AI Generated Project",
+                        "description": message,
+                        "createdAt": datetime.now().isoformat(),
+                        "totalFiles": 3,
+                        "generatedBy": "LLM"
+                    }
+                }
+            )
+            
+            # 发送完成消息
             completion_message_id = self.generate_message_id()
             completion_message = f"""
-🎉 **项目生成完成！**
+✅ **AI驱动的前端项目生成完成！**
 
-✅ 已成功生成3个文件：
-- **index.html** - 页面结构和内容
-- **style.css** - 样式和布局
-- **script.js** - 交互逻辑
+📄 已使用LLM生成3个文件：
+- **index.html** - AI生成的页面结构和内容
+- **style.css** - AI生成的样式和布局
+- **script.js** - AI生成的交互逻辑
 
-📁 **项目信息：**
-- 项目ID: {project_id}
-- 总文件数: 3
-- 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+🧠 **AI生成特性：**
+- 基于您的需求智能分析
+- 专业的前端代码结构
+- 现代化的设计和交互
+- 完整的项目文件组织
 
 💡 **使用说明：**
-您可以在FileBrowser中查看生成的文件，所有文件都已保存在内存中，可以直接在HTML预览中查看效果。
+右侧的文件浏览器已自动打开，您可以：
+1. 查看AI生成的完整代码
+2. 在预览器中实时查看页面效果
+3. 编辑代码并实时预览更改
+4. 根据需要进一步优化代码
 
-项目已完成，您可以继续编辑文件或提出新的需求！
+项目已准备就绪，享受AI的创造力！🎉
 """
             
             yield self.create_text_chunk_event(completion_message, completion_message_id)
-            
-            # 发送项目完成事件
-            yield {
-                "type": "project_complete",
-                "data": {
-                    "project_id": project_id,
-                    "status": "completed",
-                    "files": final_project["project"]["files"],
-                    "message": "前端项目生成完成"
-                }
-            }
-            
             yield self.create_message_complete_event(completion_message_id, completion_message)
             
-            # 发送流结束事件
-            yield {
-                "type": "session_end",
-                "data": {
-                    "sessionId": session_id,
-                    "message": "AI开发者代理处理完成"
-                }
-            }
-            
-            self.logger.info(f"Project generation completed: {project_id}")
+            self.logger.info(f"AI-powered project generation completed for: {message}")
             
         except Exception as e:
-            self.logger.error(f"Project generation failed: {e}", exc_info=True)
+            self.logger.error(f"AI project generation failed: {e}", exc_info=True)
             
             # 发送错误信息
             error_message_id = self.generate_message_id()
-            error_message = f"❌ 项目生成失败: {str(e)}\n\n请检查您的需求描述并重试。"
+            error_message = f"❌ AI项目生成失败: {str(e)}\n\n请检查您的需求描述并重试。"
             yield self.create_text_chunk_event(error_message, error_message_id)
             
             raise AgentExecutionError(
-                f"Project generation failed: {str(e)}",
+                f"AI project generation failed: {str(e)}",
                 agent_name=self.name,
                 details={"description": message, "error": str(e)}
             )

@@ -4,7 +4,7 @@ import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
 import { ApiChatExample } from '@/components/chat/api-chat-example'
 import { useStreamingChat } from '@/hooks'
-import { MessageCircle, Sparkles, Code2, Zap } from 'lucide-react'
+import { MessageCircle, Sparkles, Code2, Zap, Wrench } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 // 真正的AICoderPanel组件
@@ -40,6 +40,7 @@ function App() {
   const [showChat, setShowChat] = useState(false)
   const [showApiChat, setShowApiChat] = useState(false)
   const [showToolPanel, setShowToolPanel] = useState(false)
+  const [showAIDeveloper, setShowAIDeveloper] = useState(false)
   
   // 使用流式聊天Hook
   const {
@@ -108,6 +109,19 @@ export const useCounter = (initialValue: number = 0) => {
     )
   }
 
+  if (showAIDeveloper) {
+    return (
+      <div className="h-screen">
+        <ApiChatExample 
+          apiBaseUrl="http://localhost:8000"
+          className="h-full"
+          agentType="ai_developer"
+          placeholder="描述您想要生成的前端页面..."
+        />
+      </div>
+    )
+  }
+
   if (showToolPanel) {
     return <ToolPanelDemo />
   }
@@ -163,7 +177,16 @@ export const useCounter = (initialValue: number = 0) => {
               className="px-8 py-4 text-lg bg-green-600 hover:bg-green-700"
             >
               <Zap className="mr-3 h-6 w-6" />
-              API流式对话
+              深度研究代理
+            </Button>
+            <Button 
+              size="lg" 
+              variant="default"
+              onClick={() => setShowAIDeveloper(true)}
+              className="px-8 py-4 text-lg bg-purple-600 hover:bg-purple-700"
+            >
+              <Wrench className="mr-3 h-6 w-6" />
+              AI开发者代理
             </Button>
             <Button 
               size="lg" 

@@ -48,6 +48,18 @@ export const ToolInterface: React.FC<ToolInterfaceProps> = ({
     const toolCall = selectedToolMessage.content.tool_call
     const fileSystemMetadata = toolCall?.metadata?.fileSystemData as SimpleFileSystem | undefined
     
+    // 转换ISO字符串为Date对象
+    if (fileSystemMetadata?.files) {
+      const processedFileSystem = {
+        ...fileSystemMetadata,
+        files: fileSystemMetadata.files.map(file => ({
+          ...file,
+          modified: typeof file.modified === 'string' ? new Date(file.modified) : file.modified
+        }))
+      }
+      return processedFileSystem
+    }
+    
     return fileSystemMetadata
   }, [selectedToolMessage, isSelectedMessageAICoder])
 

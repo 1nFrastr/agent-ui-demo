@@ -15,6 +15,8 @@ export interface UseApiStreamingChatOptions {
   maxRetries?: number
   /** 连接超时时间（毫秒） */
   connectionTimeout?: number
+  /** 代理类型 */
+  agentType?: string
 }
 
 /**
@@ -53,13 +55,13 @@ interface StreamEvent {
  * API流式聊天Hook
  * 真实调用后端的流式接口进行对话
  */
-export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): UseApiStreamingChatReturn => {
-  const {
-    baseUrl = 'http://localhost:8000',
-    defaultSessionId = '',
-    autoGenerateId = true,
-    maxRetries = 3
-  } = options
+export const useApiStreamingChat = ({
+  baseUrl = 'http://localhost:8000',
+  defaultSessionId,
+  autoGenerateId = true,
+  maxRetries = 3,
+  agentType = 'deepresearch'
+}: UseApiStreamingChatOptions = {}): UseApiStreamingChatReturn => {
 
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -286,7 +288,7 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
       const requestData = {
         message,
         sessionId,
-        agentType: 'deepresearch'
+        agentType: agentType
       }
 
       // 发送POST请求启动流式响应
@@ -394,6 +396,7 @@ export const useApiStreamingChat = (options: UseApiStreamingChatOptions = {}): U
     baseUrl, 
     sessionId, 
     maxRetries,
+    agentType,
     handleToolCallStart,
     handleToolCallEnd, 
     handleTextChunk,
