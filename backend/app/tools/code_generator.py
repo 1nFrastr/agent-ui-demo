@@ -184,15 +184,12 @@ CSS样式：
                 temperature=0.7
             )
             
-            # 清理和验证生成的HTML
-            cleaned_html = self._clean_generated_code(html_content, "html")
-            
             return {
                 "status": "success",
                 "file_type": "html",
                 "file_name": "index.html",
-                "content": cleaned_html,
-                "size": len(cleaned_html),
+                "content": html_content,
+                "size": len(html_content),
                 "generated_at": datetime.utcnow().isoformat()
             }
             
@@ -225,15 +222,12 @@ CSS样式：
                 temperature=0.7
             )
             
-            # 清理和验证生成的CSS
-            cleaned_css = self._clean_generated_code(css_content, "css")
-            
             return {
                 "status": "success",
                 "file_type": "css",
                 "file_name": "style.css",
-                "content": cleaned_css,
-                "size": len(cleaned_css),
+                "content": css_content,
+                "size": len(css_content),
                 "generated_at": datetime.utcnow().isoformat()
             }
             
@@ -263,103 +257,18 @@ CSS样式：
                 temperature=0.7
             )
             
-            # 清理和验证生成的JavaScript
-            cleaned_js = self._clean_generated_code(js_content, "js")
-            
             return {
                 "status": "success",
                 "file_type": "js", 
                 "file_name": "script.js",
-                "content": cleaned_js,
-                "size": len(cleaned_js),
+                "content": js_content,
+                "size": len(js_content),
                 "generated_at": datetime.utcnow().isoformat()
             }
             
         except Exception as e:
             self.logger.error(f"JavaScript generation failed: {e}")
             raise
-    
-    def _clean_generated_code(self, content: str, file_type: str) -> str:
-        """Clean and validate generated code."""
-        if not content:
-            return ""
-        
-        # 移除首尾空白
-        content = content.strip()
-        
-        # 移除markdown代码块标记 - 更强健的处理
-        lines = content.split('\n')
-        cleaned_lines = []
-        skip_until_closing = False
-        
-        for i, line in enumerate(lines):
-            line_stripped = line.strip()
-            
-            # 检测代码块开始标记
-            if line_stripped.startswith("```"):
-                if not skip_until_closing:
-                    # 这是开始标记，跳过
-                    skip_until_closing = True
-                    continue
-                else:
-                    # 这是结束标记，跳过并停止跳过
-                    skip_until_closing = False
-                    continue
-            
-            # 如果不在跳过模式，添加这一行
-            if not skip_until_closing:
-                cleaned_lines.append(line)
-        
-        content = '\n'.join(cleaned_lines).strip()
-        
-        # 移除常见的提示词残留
-        content = content.replace("以下是生成的代码：", "")
-        content = content.replace("代码如下：", "")
-        content = content.replace("HTML代码：", "")
-        content = content.replace("CSS代码：", "")
-        content = content.replace("JavaScript代码：", "")
-        content = content.replace("以下是完整的", "")
-        
-        # 特定类型的清理和验证
-        if file_type == "html":
-            # 确保HTML有基本结构
-            if not content.lower().startswith("<!doctype"):
-                self.logger.warning("Generated HTML missing DOCTYPE, adding basic structure")
-                if not content.lower().startswith("<html"):
-                    content = f"<!DOCTYPE html>\n<html>\n{content}\n</html>"
-                else:
-                    content = f"<!DOCTYPE html>\n{content}"
-        
-        elif file_type == "css":
-            # 移除CSS相关的说明文字
-            if content.startswith("这是"):
-                lines = content.split('\n')
-                # 找到第一行实际CSS代码
-                for i, line in enumerate(lines):
-                    if '{' in line or line.strip().startswith('.') or line.strip().startswith('#') or line.strip().startswith('*'):
-                        content = '\n'.join(lines[i:])
-                        break
-        
-        elif file_type == "js":
-            # 移除JavaScript相关的说明文字
-            if content.startswith("这是") or content.startswith("以下"):
-                lines = content.split('\n')
-                # 找到第一行实际JS代码
-                for i, line in enumerate(lines):
-                    line_stripped = line.strip()
-                    if (line_stripped.startswith('//') or 
-                        line_stripped.startswith('/*') or 
-                        line_stripped.startswith('function') or
-                        line_stripped.startswith('const') or
-                        line_stripped.startswith('let') or
-                        line_stripped.startswith('var') or
-                        line_stripped.startswith('document') or
-                        line_stripped.startswith('window') or
-                        '{' in line_stripped):
-                        content = '\n'.join(lines[i:])
-                        break
-        
-        return content.strip()
     
     async def generate_file_stream(self, file_type: str, project_description: str, 
                                  context: Dict[str, Any] = None) -> AsyncGenerator[str, None]:
