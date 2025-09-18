@@ -7,7 +7,6 @@ import asyncio
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
-from langchain.callbacks.base import AsyncCallbackHandler
 from langsmith import Client
 from langsmith.evaluation import evaluate, LangChainStringEvaluator
 
@@ -16,23 +15,6 @@ from app.core.exceptions import AgentExecutionError
 
 
 logger = logging.getLogger(__name__)
-
-
-class StreamingCallbackHandler(AsyncCallbackHandler):
-    """Custom callback handler for streaming LLM responses."""
-    
-    def __init__(self):
-        self.content_queue = asyncio.Queue()
-        self.finished = False
-    
-    async def on_llm_new_token(self, token: str, **kwargs) -> None:
-        """Handle new token from LLM."""
-        await self.content_queue.put(token)
-    
-    async def on_llm_end(self, response, **kwargs) -> None:
-        """Handle LLM completion."""
-        self.finished = True
-        await self.content_queue.put(None)  # Signal completion
 
 
 class LLMService:
@@ -136,76 +118,22 @@ class LLMService:
             # Set run name for better tracing
             run_name = f"analysis_generation_{session_id[:8]}"
             
-            # Create callback handler for streaming
-            callback_handler = StreamingCallbackHandler()
-            
-            # Start LLM generation in background with metadata
-            llm_task = asyncio.create_task(
-                self._generate_with_callback(
-                    [system_message, user_message], 
-                    callback_handler,
-                    metadata=metadata,
-                    run_name=run_name
-                )
-            )
-            
-            # Stream tokens as they arrive
-            while True:
-                try:
-                    # Wait for next token with timeout
-                    token = await asyncio.wait_for(
-                        callback_handler.content_queue.get(), 
-                        timeout=30.0
-                    )
-                    
-                    if token is None:  # Completion signal
-                        break
-                    
-                    yield token
-                    
-                except asyncio.TimeoutError:
-                    self.logger.error("LLM streaming timeout")
-                    break
-            
-            # Ensure the LLM task completes
-            await llm_task
+            # 直接使用LangChain的streaming支持，更简洁的方式
+            try:
+                async for chunk in self.llm.astream([system_message, user_message]):
+                    if chunk.content:  # 只yield非空内容
+                        yield chunk.content
+            except asyncio.TimeoutError:
+                self.logger.error("LLM streaming timeout")
+                yield "\n\n⚠️ **响应超时**: 请稍后重试。"
+            except Exception as stream_error:
+                self.logger.error(f"LLM streaming error: {stream_error}")
+                yield f"\n\n⚠️ **流式响应错误**: {str(stream_error)}"
             
         except Exception as e:
             self.logger.error(f"LLM analysis failed: {e}", exc_info=True)
             # Yield error message to client
             yield f"\n\n⚠️ **分析生成失败**: {str(e)}\n\n请稍后重试或联系管理员。"
-    
-    async def _generate_with_callback(self, messages, callback_handler, metadata=None, run_name=None):
-        """Generate LLM response with callback handler and optional metadata for tracing."""
-        try:
-            # For LangChain, we need to use the correct parameter structure
-            # Metadata should be passed differently
-            
-            if metadata or run_name:
-                # Configure tracing using environment variables approach
-                # since direct config parameter is not supported by agenerate
-                original_env = {}
-                
-                # Store original values
-                if run_name:
-                    original_env['LANGCHAIN_SESSION'] = os.environ.get('LANGCHAIN_SESSION')
-                    os.environ['LANGCHAIN_SESSION'] = run_name
-                
-                try:
-                    await self.llm.agenerate([messages], callbacks=[callback_handler])
-                finally:
-                    # Restore original environment
-                    for key, value in original_env.items():
-                        if value is None:
-                            os.environ.pop(key, None)
-                        else:
-                            os.environ[key] = value
-            else:
-                await self.llm.agenerate([messages], callbacks=[callback_handler])
-                
-        except Exception as e:
-            self.logger.error(f"LLM generation error: {e}")
-            await callback_handler.content_queue.put(None)
     
     def _prepare_analysis_context(self, query: str, search_results: Any, web_contents: list) -> str:
         """Prepare context information for LLM analysis."""
