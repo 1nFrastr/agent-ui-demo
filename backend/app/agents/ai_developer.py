@@ -25,22 +25,6 @@ class AIDeveloperAgent(BaseAgent):
         super().__init__("AIDeveloperAgent")
         self.code_generator = CodeGeneratorTool()
         self.llm_service = get_llm_service()
-        
-        # 文件生成顺序
-        self.generation_order = [
-            {"file_type": "html", "file_name": "index.html", "status": "generating_html"},
-            {"file_type": "css", "file_name": "style.css", "status": "generating_css"},
-            {"file_type": "js", "file_name": "script.js", "status": "generating_js"}
-        ]
-    
-    async def get_capabilities(self) -> List[str]:
-        """Get agent capabilities."""
-        return [
-            "frontend_project_generation",
-            "html_css_js_creation",
-            "code_analysis",
-            "real_time_file_updates"
-        ]
     
     @traceable(name="ai_developer_agent")
     async def process_message(

@@ -146,8 +146,7 @@ class ChatService:
             "updated_at": datetime.utcnow().isoformat(),
             "message_count": 0,
             "status": "active",
-            "agent": "DeepResearchAgent",
-            "capabilities": await self.deepresearch_agent.get_capabilities()
+            "agent": "DeepResearchAgent"
         }
     
     async def delete_session(self, session_id: str) -> Dict[str, Any]:

@@ -55,16 +55,6 @@ class DeepResearchAgent(BaseAgent):
         if self._shared_client and not self._shared_client.is_closed:
             await self._shared_client.aclose()
     
-    async def get_capabilities(self) -> List[str]:
-        """Get agent capabilities."""
-        return [
-            "web_search",
-            "content_extraction", 
-            "information_analysis",
-            "research_planning",
-            "content_synthesis"
-        ]
-    
     @traceable(name="deep_research_agent")
     async def process_message(
         self, 

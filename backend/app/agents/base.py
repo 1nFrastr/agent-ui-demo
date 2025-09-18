@@ -30,11 +30,6 @@ class BaseAgent(ABC):
         """Process a message and yield streaming events."""
         pass
     
-    @abstractmethod
-    async def get_capabilities(self) -> List[str]:
-        """Get agent capabilities."""
-        pass
-    
     def generate_message_id(self) -> str:
         """Generate a unique message ID."""
         return str(uuid.uuid4())
