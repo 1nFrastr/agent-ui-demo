@@ -271,7 +271,6 @@ CSS样式：
         result = await self.execute(parameters)
         
         if result["status"] == "success":
-            content = result["content"]
-            yield content
+            yield result["content"]
         else:
             yield f"// 生成失败: {result.get('error', 'Unknown error')}"
