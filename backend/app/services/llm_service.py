@@ -271,8 +271,6 @@ class LLMService:
 
 # Global LLM service instance  
 _llm_service: Optional[LLMService] = None
-_initialization_lock = asyncio.Lock()
-
 
 def get_llm_service() -> LLMService:
     """Get or create LLM service instance with improved initialization."""
@@ -289,25 +287,5 @@ def get_llm_service() -> LLMService:
             logger.info(f"⚡ LLM service created in {duration:.2f}s")
         else:
             logger.info("⚡ LLM service created successfully")
-    
-    return _llm_service
-
-
-async def get_llm_service_async() -> LLMService:
-    """Get or create LLM service instance with async initialization and locking."""
-    global _llm_service
-    
-    if _llm_service is None:
-        async with _initialization_lock:
-            if _llm_service is None:  # Double-check pattern
-                logger.info("🔄 Async creating new LLM service instance...")
-                start_time = asyncio.get_event_loop().time()
-                
-                # Run the sync initialization in a thread pool
-                loop = asyncio.get_event_loop()
-                _llm_service = await loop.run_in_executor(None, LLMService)
-                
-                duration = asyncio.get_event_loop().time() - start_time
-                logger.info(f"⚡ LLM service async created in {duration:.2f}s")
     
     return _llm_service

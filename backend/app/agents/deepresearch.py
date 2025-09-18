@@ -14,7 +14,7 @@ from app.agents.base import BaseAgent
 from app.tools.registry import tool_registry
 from app.tools.web_search import WebSearchTool
 from app.tools.web_content import WebContentTool
-from app.services.llm_service import get_llm_service, get_llm_service_async
+from app.services.llm_service import get_llm_service
 from app.config import settings
 from app.core.exceptions import AgentExecutionError
 
