@@ -10,7 +10,6 @@ from langsmith import traceable
 
 from app.agents.base import BaseAgent
 from app.tools.code_generator import CodeGeneratorTool
-from app.tools.project_structure import ProjectStructureTool, ProjectStatus, FileStatus
 from app.services.llm_service import get_llm_service
 from app.config import settings
 from app.core.exceptions import AgentExecutionError
@@ -25,7 +24,6 @@ class AIDeveloperAgent(BaseAgent):
     def __init__(self):
         super().__init__("AIDeveloperAgent")
         self.code_generator = CodeGeneratorTool()
-        self.project_structure = ProjectStructureTool()
         self.llm_service = get_llm_service()
         
         # 文件生成顺序
@@ -40,7 +38,6 @@ class AIDeveloperAgent(BaseAgent):
         return [
             "frontend_project_generation",
             "html_css_js_creation",
-            "project_structure_management",
             "code_analysis",
             "real_time_file_updates"
         ]
@@ -317,57 +314,3 @@ class AIDeveloperAgent(BaseAgent):
                 agent_name=self.name,
                 details={"description": message, "error": str(e)}
             )
-    
-    def get_project(self, project_id: str):
-        """Get project by ID."""
-        return self.project_structure.get_project(project_id)
-    
-    def list_projects(self):
-        """List all projects."""
-        return self.project_structure.list_projects()
-    
-    async def regenerate_file(self, project_id: str, file_type: str, 
-                            additional_requirements: str = "") -> Dict[str, Any]:
-        """Regenerate a specific file in the project."""
-        project = self.project_structure.get_project(project_id)
-        if not project:
-            raise ValueError(f"Project not found: {project_id}")
-        
-        # 获取项目描述和已有文件
-        project_description = project.description
-        if additional_requirements:
-            project_description += f"\n\n额外要求: {additional_requirements}"
-        
-        # 准备生成参数
-        generation_params = {
-            "file_type": file_type,
-            "project_description": project_description
-        }
-        
-        # 添加上下文
-        if file_type == "css":
-            html_file = project.get_file("index.html")
-            if html_file and html_file.content:
-                generation_params["html_content"] = html_file.content
-        elif file_type == "js":
-            html_file = project.get_file("index.html")
-            css_file = project.get_file("style.css")
-            if html_file and html_file.content:
-                generation_params["html_content"] = html_file.content
-            if css_file and css_file.content:
-                generation_params["css_content"] = css_file.content
-        
-        # 生成新内容
-        result = await self.code_generator.execute(generation_params)
-        
-        if result["status"] == "success":
-            # 更新文件
-            file_name = result["file_name"]
-            await self.project_structure.execute({
-                "action": "update_file",
-                "project_id": project_id,
-                "file_name": file_name,
-                "file_content": result["content"]
-            })
-        
-        return result

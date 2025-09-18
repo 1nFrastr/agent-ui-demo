@@ -39,11 +39,6 @@ async def lifespan(app: FastAPI):
         agent = DeepResearchAgent()
         logger.info("✅ DeepResearch agent pre-warmed successfully")
         
-        # 预初始化工具注册表
-        logger.info("Initializing tool registry...")
-        from app.tools.registry import tool_registry
-        logger.info("✅ Tool registry pre-warmed successfully")
-        
         logger.info("🎉 All critical services pre-warmed, ready for requests!")
         
     except Exception as e:

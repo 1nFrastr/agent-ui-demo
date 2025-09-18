@@ -11,7 +11,6 @@ import httpx
 from langsmith import traceable
 
 from app.agents.base import BaseAgent
-from app.tools.registry import tool_registry
 from app.tools.web_search import WebSearchTool
 from app.tools.web_content import WebContentTool
 from app.services.llm_service import get_llm_service
