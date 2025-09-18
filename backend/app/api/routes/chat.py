@@ -3,11 +3,9 @@ from fastapi.responses import StreamingResponse
 from typing import AsyncGenerator
 import json
 import asyncio
-import uuid
 from datetime import datetime, timezone
 
 from app.models.chat import ChatRequest
-from app.models.response import ChatResponse
 from app.services.chat_service import ChatService
 from app.core.exceptions import AgentExecutionError
 from app.config import Settings, get_settings
@@ -82,41 +80,3 @@ async def stream_chat(
             "Access-Control-Allow-Headers": "Content-Type",
         }
     )
-
-@router.post("/", response_model=ChatResponse)
-async def chat(
-    request: ChatRequest,
-    chat_service: ChatService = Depends(get_chat_service)
-):
-    """Standard chat endpoint (non-streaming)."""
-    
-    try:
-        response_content = await chat_service.process_message(
-            message=request.message,
-            session_id=request.sessionId,
-            config={"agent_type": request.agentType}
-        )
-        
-        # Create response model
-        response = ChatResponse(
-            messageId=str(uuid.uuid4()),
-            sessionId=request.sessionId,
-            content=response_content,
-            timestamp=datetime.now(timezone.utc)
-        )
-        return response
-        
-    except AgentExecutionError as e:
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "message": str(e),
-                "agent": e.agent_name,
-                "details": e.details
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={"message": f"Internal server error: {str(e)}"}
-        )

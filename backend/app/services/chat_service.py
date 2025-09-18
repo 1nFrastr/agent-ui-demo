@@ -2,7 +2,6 @@
 
 import logging
 from typing import Any, AsyncGenerator, Dict, Optional
-import uuid
 from datetime import datetime
 
 from app.agents.deepresearch import DeepResearchAgent
@@ -22,40 +21,6 @@ class ChatService:
         self.deepresearch_agent = DeepResearchAgent()
         self.ai_developer_agent = AIDeveloperAgent()
         self.logger = logging.getLogger("app.services.ChatService")
-    
-    async def process_message(
-        self, 
-        message: str, 
-        session_id: str,
-        config: Dict[str, Any]
-    ) -> str:
-        """Process a message and return complete response."""
-        
-        try:
-            self.logger.info(f"Processing message for session {session_id}: {message[:100]}...")
-            
-            # For non-streaming mode, collect all events and return final response
-            final_response = ""
-            
-            async for event in self.deepresearch_agent.process_message(
-                message=message,
-                session_id=session_id
-            ):
-                if event["type"] == "text_chunk":
-                    final_response += event["data"]["content"]
-                elif event["type"] == "message_complete":
-                    final_response = event["data"]["content"]
-                    break
-            
-            return final_response
-            
-        except Exception as e:
-            self.logger.error(f"Message processing failed: {e}", exc_info=True)
-            raise AgentExecutionError(
-                f"Failed to process message: {str(e)}",
-                agent_name="ChatService",
-                details={"message": message, "session_id": session_id}
-            )
     
     async def stream_response(
         self,
