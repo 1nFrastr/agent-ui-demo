@@ -243,31 +243,6 @@ class LLMService:
         except Exception as e:
             self.logger.error(f"LLM completion failed: {e}", exc_info=True)
             raise
-    
-    def log_analysis_completion(self, session_id: str, query: str, success: bool, error_msg: str = None):
-        """Log analysis completion to LangSmith for monitoring."""
-        if self.langsmith_client:
-            try:
-                # Create a run record for the analysis task
-                run_data = {
-                    "name": f"analysis_task_{session_id[:8]}",
-                    "inputs": {"query": query},
-                    "run_type": "llm",
-                    "session_id": session_id,
-                }
-                
-                if success:
-                    run_data["outputs"] = {"status": "success"}
-                else:
-                    run_data["outputs"] = {"status": "failed", "error": error_msg}
-                
-                # Note: This is a simplified logging approach
-                # In production, you might want to use more sophisticated tracking
-                self.logger.info(f"Analysis task logged to LangSmith: {run_data}")
-                
-            except Exception as e:
-                self.logger.warning(f"Failed to log to LangSmith: {e}")
-
 
 # Global LLM service instance  
 _llm_service: Optional[LLMService] = None
