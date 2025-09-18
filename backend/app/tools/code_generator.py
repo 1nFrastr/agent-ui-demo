@@ -122,12 +122,6 @@ CSS样式：
                 type="string",
                 description="CSS内容（生成JS时需要）",
                 required=False
-            ),
-            ToolParameter(
-                name="style_preferences",
-                type="object",
-                description="样式偏好设置（主题、颜色等）",
-                required=False
             )
         ]
     
@@ -141,15 +135,14 @@ CSS样式：
         project_description = parameters["project_description"]
         html_content = parameters.get("html_content", "")
         css_content = parameters.get("css_content", "")
-        style_preferences = parameters.get("style_preferences", {})
         
         self.logger.info(f"Generating {file_type} code for project: {project_description[:100]}...")
         
         try:
             if file_type == "html":
-                return await self._generate_html(project_description, style_preferences)
+                return await self._generate_html(project_description)
             elif file_type == "css":
-                return await self._generate_css(project_description, html_content, style_preferences)
+                return await self._generate_css(project_description, html_content)
             elif file_type == "js":
                 return await self._generate_js(project_description, html_content, css_content)
             else:
@@ -163,7 +156,7 @@ CSS样式：
                 "message": f"代码生成失败: {str(e)}"
             }
     
-    async def _generate_html(self, project_description: str, style_preferences: Dict) -> Dict[str, Any]:
+    async def _generate_html(self, project_description: str) -> Dict[str, Any]:
         """Generate HTML file."""
         self.logger.info("Generating HTML file...")
         
@@ -171,10 +164,6 @@ CSS样式：
         prompt = self.html_prompt_template.format(
             project_description=project_description
         )
-        
-        # 添加样式偏好
-        if style_preferences:
-            prompt += f"\n样式偏好：{style_preferences}\n"
         
         try:
             # 调用LLM生成HTML
@@ -197,7 +186,7 @@ CSS样式：
             self.logger.error(f"HTML generation failed: {e}")
             raise
     
-    async def _generate_css(self, project_description: str, html_content: str, style_preferences: Dict) -> Dict[str, Any]:
+    async def _generate_css(self, project_description: str, html_content: str) -> Dict[str, Any]:
         """Generate CSS file."""
         self.logger.info("Generating CSS file...")
         
@@ -209,10 +198,6 @@ CSS样式：
             project_description=project_description,
             html_content=html_content
         )
-        
-        # 添加样式偏好
-        if style_preferences:
-            prompt += f"\n样式偏好：{style_preferences}\n"
         
         try:
             # 调用LLM生成CSS
