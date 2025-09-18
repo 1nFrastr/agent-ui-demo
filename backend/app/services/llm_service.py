@@ -235,6 +235,7 @@ class LLMService:
             )
             
             # Generate response
+            # TODO: 改成流式传输
             response = await llm_with_params.ainvoke([user_message])
             
             return response.content

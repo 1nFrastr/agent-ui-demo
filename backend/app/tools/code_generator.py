@@ -272,12 +272,6 @@ CSS样式：
         
         if result["status"] == "success":
             content = result["content"]
-            
-            # 模拟流式返回（将内容分块）
-            chunk_size = 50  # 每次返回50个字符
-            for i in range(0, len(content), chunk_size):
-                chunk = content[i:i + chunk_size]
-                yield chunk
-                await asyncio.sleep(0.1)  # 模拟生成延迟
+            yield content
         else:
             yield f"// 生成失败: {result.get('error', 'Unknown error')}"
