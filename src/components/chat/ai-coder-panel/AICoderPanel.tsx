@@ -23,6 +23,13 @@ export const AICoderPanel: React.FC<AICoderPanelProps> = ({
     initialFiles || { files: [], selectedPath: undefined }
   )
 
+  // 监听 initialFiles 变化，同步更新内部状态
+  React.useEffect(() => {
+    if (initialFiles) {
+      setFiles(initialFiles)
+    }
+  }, [initialFiles])
+
   const handleFilesChange = (newFiles: SimpleFileSystem) => {
     setFiles(newFiles)
     onFilesChange?.(newFiles)
