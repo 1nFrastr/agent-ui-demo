@@ -4,8 +4,9 @@ import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
 import { ApiChatExample } from '@/components/chat/api-chat-example'
 import { useStreamingChat } from '@/hooks'
-import { MessageCircle, Sparkles, Code2, Zap, Wrench } from 'lucide-react'
+import { MessageCircle, Sparkles, Code2, Zap, Wrench, FileCode } from 'lucide-react'
 import type { Message } from '@/types/chat'
+import MonacoEditorDemo from './MonacoEditorDemo'
 
 // 真正的AICoderPanel组件
 import { AICoderPanel } from './components/chat/ai-coder-panel/AICoderPanel'
@@ -41,6 +42,7 @@ function App() {
   const [showApiChat, setShowApiChat] = useState(false)
   const [showToolPanel, setShowToolPanel] = useState(false)
   const [showAIDeveloper, setShowAIDeveloper] = useState(false)
+  const [showMonacoEditor, setShowMonacoEditor] = useState(false)
   
   // 使用流式聊天Hook
   const {
@@ -97,6 +99,10 @@ export const useCounter = (initialValue: number = 0) => {
       status: 'delivered',
     }
   ]
+
+  if (showMonacoEditor) {
+    return <MonacoEditorDemo />
+  }
 
   if (showApiChat) {
     return (
@@ -196,6 +202,15 @@ export const useCounter = (initialValue: number = 0) => {
             >
               <Code2 className="mr-3 h-6 w-6" />
               编程工具面板
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => setShowMonacoEditor(true)}
+              className="px-8 py-4 text-lg border-orange-500 text-orange-600 hover:bg-orange-50"
+            >
+              <FileCode className="mr-3 h-6 w-6" />
+              Monaco编辑器
             </Button>
           </div>
           <div className="text-center mt-4">

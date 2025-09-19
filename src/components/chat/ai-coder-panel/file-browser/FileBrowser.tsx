@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { cn } from '@/utils'
 import type { FileBrowserProps, SimpleFile } from '../types'
-import { SyntaxHighlightEditor } from '@/components/ui/syntax-highlight-editor'
+import { MonacoCodeEditor } from '@/components/ui/monaco-code-editor'
 import { 
   File, 
   Folder, 
@@ -127,14 +127,18 @@ const FileEditor: React.FC<{
 
       {/* 编辑器内容 */}
       <div className="flex-1 relative">
-        <SyntaxHighlightEditor
+        <MonacoCodeEditor
           value={content}
           onChange={handleContentChange}
           filename={file.name}
           readOnly={readOnly}
-          placeholder={readOnly ? '文件内容为空' : '开始编辑文件内容...'}
-          showLineNumbers={true}
+          height="100%"
+          width="100%"
+          showMinimap={false}
           className="h-full"
+          theme="light"
+          fontSize={14}
+          wordWrap="on"
         />
       </div>
     </div>
@@ -253,14 +257,18 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
 
             {/* 文件内容预览 */}
             <div className="flex-1 relative">
-              <SyntaxHighlightEditor
+              <MonacoCodeEditor
                 value={selectedFileObj.content || ''}
                 onChange={() => {}} // 预览模式不允许编辑
                 filename={selectedFileObj.name}
                 readOnly={true}
-                placeholder="文件内容为空"
-                showLineNumbers={true}
+                height="100%"
+                width="100%"
+                showMinimap={false}
                 className="h-full"
+                theme="light"
+                fontSize={14}
+                wordWrap="on"
               />
             </div>
           </div>
