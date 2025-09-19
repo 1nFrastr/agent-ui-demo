@@ -84,19 +84,53 @@ export const useApiStreamingChat = ({
 
   // EventSource连接引用
   const eventSourceRef = useRef<EventSource | null>(null)
+  // ReadableStream reader引用（用于手动取消流）
+  const readerRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null)
   // 当前流式消息引用 - 支持多个并发流式消息
   const currentStreamingMessagesRef = useRef<Set<string>>(new Set())
   // 最后一条用户消息（用于重试）
   const lastUserMessageRef = useRef<string>('')
+  // 停止标志引用
+  const isStoppedRef = useRef(false)
 
   /**
    * 停止当前EventSource连接
    */
   const stopStreaming = useCallback(() => {
+    // 设置停止标志
+    isStoppedRef.current = true
+    
+    // 关闭EventSource连接
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
       eventSourceRef.current = null
     }
+    
+    // 取消ReadableStream读取
+    if (readerRef.current) {
+      readerRef.current.cancel('User stopped the stream')
+      readerRef.current = null
+    }
+    
+    // 更新正在运行的工具调用状态为 'stop'
+    setMessages(prev => 
+      prev.map(msg => {
+        if (msg.type === 'tool_call' && msg.content.tool_call?.status === 'running') {
+          return {
+            ...msg,
+            content: {
+              tool_call: {
+                ...msg.content.tool_call,
+                status: 'stop' as const,
+                error: '用户停止了操作',
+                endTime: new Date()
+              }
+            }
+          }
+        }
+        return msg
+      })
+    )
     
     // 如果有正在流式传输的消息，标记为完成
     const streamingMessages = currentStreamingMessagesRef.current
@@ -114,12 +148,20 @@ export const useApiStreamingChat = ({
     setIsLoading(false)
     setIsConnecting(false)
     setConnectionError(null)
+    
+    console.log('停止API流式传输')
   }, [])
 
   /**
    * 处理工具调用开始事件
    */
   const handleToolCallStart = useCallback((eventData: Record<string, unknown>) => {
+    // 检查是否已被停止
+    if (isStoppedRef.current) {
+      console.log('工具调用开始事件被忽略：已停止')
+      return
+    }
+    
     const toolMessageId = generateId()
     
     // 从工具名称映射到前端的工具类型
@@ -158,6 +200,12 @@ export const useApiStreamingChat = ({
    * 处理工具调用结束事件
    */
   const handleToolCallEnd = useCallback((eventData: Record<string, unknown>) => {
+    // 检查是否已被停止
+    if (isStoppedRef.current) {
+      console.log('工具调用结束事件被忽略：已停止')
+      return
+    }
+    
     setMessages(prev => 
       prev.map(msg => {
         if (msg.type === 'tool_call' && msg.content.tool_call?.id === eventData.toolId) {
@@ -187,6 +235,12 @@ export const useApiStreamingChat = ({
    * 处理文本块事件（流式文本）
    */
   const handleTextChunk = useCallback((eventData: Record<string, unknown>) => {
+    // 检查是否已被停止
+    if (isStoppedRef.current) {
+      console.log('文本块事件被忽略：已停止')
+      return
+    }
+    
     const messageId = eventData.messageId as string
     const content = eventData.content as string
     
@@ -224,6 +278,12 @@ export const useApiStreamingChat = ({
    * 处理消息完成事件
    */
   const handleMessageComplete = useCallback((eventData: Record<string, unknown>) => {
+    // 检查是否已被停止
+    if (isStoppedRef.current) {
+      console.log('消息完成事件被忽略：已停止')
+      return
+    }
+    
     const messageId = eventData.messageId as string
     
     setMessages(prev => 
@@ -275,6 +335,8 @@ export const useApiStreamingChat = ({
    */
   const startEventStream = useCallback(async (message: string) => {
     try {
+      // 重置停止标志
+      isStoppedRef.current = false
       setIsConnecting(true)
       setConnectionError(null)
       
@@ -309,10 +371,17 @@ export const useApiStreamingChat = ({
 
       // 使用ReadableStream处理流式响应
       const reader = response.body.getReader()
+      readerRef.current = reader
       const decoder = new TextDecoder()
 
       try {
         while (true) {
+          // 检查是否已被停止
+          if (isStoppedRef.current) {
+            console.log('检测到停止信号，中断流式读取')
+            break
+          }
+          
           const { done, value } = await reader.read()
           
           if (done) {
@@ -369,6 +438,7 @@ export const useApiStreamingChat = ({
         throw streamError
       } finally {
         reader.releaseLock()
+        readerRef.current = null
       }
 
     } catch (error) {
@@ -421,6 +491,8 @@ export const useApiStreamingChat = ({
     setMessages([])
     setSessionId(generateSessionId())
     setConnectionError(null)
+    // 重置停止标志
+    isStoppedRef.current = false
   }, [stopStreaming, generateSessionId])
 
   /**
@@ -431,6 +503,8 @@ export const useApiStreamingChat = ({
     
     stopStreaming()
     setConnectionError(null)
+    // 重置停止标志
+    isStoppedRef.current = false
     
     // 重新发送最后一条用户消息
     await startEventStream(lastUserMessageRef.current)
