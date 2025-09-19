@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
 import { ApiChatExample } from '@/components/chat/api-chat-example'
-import { useStreamingChat } from '@/hooks'
+import { useMockStreamingChat } from '@/hooks'
 import { MessageCircle, Sparkles, Code2, Zap, Wrench } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
@@ -49,7 +49,7 @@ function App() {
     sendMessage,
     stopStreaming,
     clearChat,
-  } = useStreamingChat()
+  } = useMockStreamingChat()
 
   // 示例消息数据
   const sampleMessages: Message[] = [

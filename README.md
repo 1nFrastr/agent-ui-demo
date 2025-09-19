@@ -89,11 +89,11 @@ uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### 2. 流式聊天Hook
 
-#### useStreamingChat (模拟)
+#### useMockStreamingChat (模拟)
 ```typescript
-import { useStreamingChat } from '@/hooks'
+import { useMockStreamingChat } from '@/hooks'
 
-const { messages, isLoading, sendMessage } = useStreamingChat()
+const { messages, isLoading, sendMessage } = useMockStreamingChat()
 ```
 
 #### useApiStreamingChat (真实API)

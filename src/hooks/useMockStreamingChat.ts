@@ -2,14 +2,14 @@ import { useState, useCallback, useRef } from 'react'
 import type { Message } from '@/types/chat'
 import { createSampleFileSystem } from '@/components/chat/ai-coder-panel/sampleData'
 
-interface UseStreamingChatOptions {
+interface UseMockStreamingChatOptions {
   /** 流式回复的延迟时间（毫秒） */
   streamDelay?: number
   /** 每次流式更新的字符数 */
   chunkSize?: number
 }
 
-interface UseStreamingChatReturn {
+interface UseMockStreamingChatReturn {
   /** 消息列表 */
   messages: Message[]
   /** 是否正在加载 */
@@ -380,7 +380,7 @@ ${htmlFile?.content || '// HTML文件内容未找到'}
   }
 ]
 
-export const useStreamingChat = (options: UseStreamingChatOptions = {}): UseStreamingChatReturn => {
+export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}): UseMockStreamingChatReturn => {
   const { streamDelay = 10, chunkSize = 50 } = options
   
   const [messages, setMessages] = useState<Message[]>([])
