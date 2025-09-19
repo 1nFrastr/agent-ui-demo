@@ -30,7 +30,6 @@ export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
   const {
     messages,
     isLoading,
-    isConnecting,
     connectionError,
     sendMessage,
     stopStreaming,
@@ -86,22 +85,6 @@ export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
               请确保后端服务器运行在 {apiBaseUrl}
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // 如果正在连接，显示连接状态
-  if (isConnecting) {
-    return (
-      <div className={`flex flex-col h-full ${className || ''}`}>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 mx-auto mb-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-600 dark:text-gray-400">
-              正在连接到 AI 服务器...
             </p>
           </div>
         </div>
