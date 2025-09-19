@@ -200,7 +200,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
   return (
     <div className="flex h-full">
       {/* 文件列表 */}
-      <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="w-1/4 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="p-3 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">文件列表</h3>
         </div>
