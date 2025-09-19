@@ -168,12 +168,15 @@ class GomokuGame {
     endGame(winner) {
         this.gameOver = true;
         
+        let message = '';
         if (winner === 'draw') {
             this.stats.draws++;
-            document.getElementById('gameStatus').textContent = '游戏平局！';
+            message = '游戏平局！';
+            document.getElementById('gameStatus').textContent = message;
         } else {
             const winnerName = winner === 'black' ? '黑子' : '白子';
-            document.getElementById('gameStatus').textContent = `${winnerName} 获胜！`;
+            message = `${winnerName} 获胜！`;
+            document.getElementById('gameStatus').textContent = message;
             
             if (winner === 'black') {
                 this.stats.blackWins++;
@@ -181,6 +184,9 @@ class GomokuGame {
                 this.stats.whiteWins++;
             }
         }
+        
+        // 弹出游戏结束提示
+        alert(`🎉 游戏结束！\n${message}\n\n统计信息：\n黑子获胜：${this.stats.blackWins + (winner === 'black' ? 1 : 0)} 次\n白子获胜：${this.stats.whiteWins + (winner === 'white' ? 1 : 0)} 次\n平局：${this.stats.draws + (winner === 'draw' ? 1 : 0)} 次`);
         
         this.saveStats();
         this.updateStatsDisplay();
