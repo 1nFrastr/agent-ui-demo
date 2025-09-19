@@ -3,16 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>示例页面</title>
+    <title>五子棋游戏</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>欢迎使用AI编程工具</h1>
-        <p>这是一个示例HTML文件。</p>
-        <button id="clickBtn">点击我</button>
-        <div id="output"></div>
+    <div class="game-container">
+        <h1>五子棋游戏</h1>
+        
+        <!-- 游戏信息面板 -->
+        <div class="game-info">
+            <div class="current-player">
+                当前玩家: <span id="currentPlayer">黑子</span>
+            </div>
+            <div class="game-status" id="gameStatus">
+                游戏进行中...
+            </div>
+        </div>
+        
+        <!-- 控制按钮 -->
+        <div class="controls">
+            <button id="resetBtn" class="control-btn">重新开始</button>
+            <button id="undoBtn" class="control-btn">悔棋</button>
+            <button id="hintBtn" class="control-btn">提示</button>
+        </div>
+        
+        <!-- 游戏棋盘 -->
+        <div class="board-container">
+            <div id="gameBoard" class="game-board">
+                <!-- 棋盘格子将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 游戏统计 -->
+        <div class="game-stats">
+            <div class="stat-item">
+                <span class="stat-label">黑子胜局:</span>
+                <span id="blackWins" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">白子胜局:</span>
+                <span id="whiteWins" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">平局:</span>
+                <span id="draws" class="stat-value">0</span>
+            </div>
+        </div>
+        
+        <!-- 游戏规则说明 -->
+        <div class="rules-container">
+            <h3>游戏规则</h3>
+            <ul class="rules-list">
+                <li>两人对弈，黑子先行</li>
+                <li>在棋盘交叉点落子</li>
+                <li>率先连成五子者获胜</li>
+                <li>可横、竖、斜连成五子</li>
+                <li>点击棋盘交叉点下棋</li>
+            </ul>
+        </div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
