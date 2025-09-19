@@ -11,8 +11,6 @@ export interface UseApiStreamingChatOptions {
   defaultSessionId?: string
   /** 是否自动生成消息ID */
   autoGenerateId?: boolean
-  /** 错误重试次数 */
-  maxRetries?: number
   /** 连接超时时间（毫秒） */
   connectionTimeout?: number
   /** 代理类型 */
@@ -59,7 +57,6 @@ export const useApiStreamingChat = ({
   baseUrl = 'http://localhost:8000',
   defaultSessionId,
   autoGenerateId = true,
-  maxRetries = 3,
   agentType = 'deepresearch'
 }: UseApiStreamingChatOptions = {}): UseApiStreamingChatReturn => {
 
@@ -89,8 +86,6 @@ export const useApiStreamingChat = ({
   const eventSourceRef = useRef<EventSource | null>(null)
   // 当前流式消息引用 - 支持多个并发流式消息
   const currentStreamingMessagesRef = useRef<Set<string>>(new Set())
-  // 重试计数器
-  const retryCountRef = useRef<number>(0)
   // 最后一条用户消息（用于重试）
   const lastUserMessageRef = useRef<string>('')
 
@@ -249,7 +244,6 @@ export const useApiStreamingChat = ({
     // 如果所有流式消息都完成了，结束加载状态
     if (currentStreamingMessagesRef.current.size === 0) {
       setIsLoading(false)
-      retryCountRef.current = 0 // 重置重试计数
     }
   }, [])
 
@@ -382,20 +376,10 @@ export const useApiStreamingChat = ({
       setConnectionError(error instanceof Error ? error.message : '连接失败')
       setIsLoading(false)
       setIsConnecting(false)
-      
-      // 如果重试次数没有达到上限，自动重试
-      if (retryCountRef.current < maxRetries) {
-        retryCountRef.current++
-        console.log(`Retrying connection (${retryCountRef.current}/${maxRetries})...`)
-        setTimeout(() => {
-          startEventStream(message)
-        }, 1000 * retryCountRef.current) // 递增延迟
-      }
     }
   }, [
     baseUrl, 
     sessionId, 
-    maxRetries,
     agentType,
     handleToolCallStart,
     handleToolCallEnd, 
@@ -437,7 +421,6 @@ export const useApiStreamingChat = ({
     setMessages([])
     setSessionId(generateSessionId())
     setConnectionError(null)
-    retryCountRef.current = 0
   }, [stopStreaming, generateSessionId])
 
   /**
@@ -448,7 +431,6 @@ export const useApiStreamingChat = ({
     
     stopStreaming()
     setConnectionError(null)
-    retryCountRef.current = 0
     
     // 重新发送最后一条用户消息
     await startEventStream(lastUserMessageRef.current)

@@ -38,7 +38,6 @@ export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
   } = useApiStreamingChat({
     baseUrl: apiBaseUrl,
     defaultSessionId: sessionId,
-    maxRetries: 3,
     agentType: agentType
   })
 
