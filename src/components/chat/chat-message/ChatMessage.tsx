@@ -2,7 +2,7 @@ import * as React from 'react'
 import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { Wrench, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react'
+import { Wrench, CheckCircle, XCircle, Loader2, ExternalLink, CirclePause } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 export interface ChatMessageProps {
@@ -91,11 +91,15 @@ export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessa
                   {message.content.tool_call.status === 'error' && (
                     <XCircle className="h-4 w-4 text-red-600" />
                   )}
+                  {message.content.tool_call.status === 'stop' && (
+                    <CirclePause className="h-4 w-4 text-orange-600" />
+                  )}
                   <Wrench className="h-4 w-4 text-blue-600" />
                   <span className="font-medium text-blue-900 dark:text-blue-100">
                     {message.content.tool_call.status === 'running' && `正在调用 ${message.content.tool_call.name}...`}
                     {message.content.tool_call.status === 'success' && `已完成 ${message.content.tool_call.name}`}
                     {message.content.tool_call.status === 'error' && `调用 ${message.content.tool_call.name} 失败`}
+                    {message.content.tool_call.status === 'stop' && `${message.content.tool_call.name} 已停止`}
                   </span>
                 </div>
                 

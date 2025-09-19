@@ -16,7 +16,7 @@ export type MessageType = 'text' | 'code' | 'image' | 'file' | 'system' | 'tool_
 /**
  * 工具调用状态
  */
-export type ToolCallStatus = 'running' | 'success' | 'error'
+export type ToolCallStatus = 'running' | 'success' | 'error' | 'stop'
 
 /**
  * 工具调用类型

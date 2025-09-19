@@ -386,11 +386,14 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const streamingTimeoutRef = useRef<number | null>(null)
+  const stepTimeoutRef = useRef<number | null>(null) // 添加步骤超时引用
+  const toolTimeoutRef = useRef<number | null>(null) // 添加工具调用超时引用
   const currentStreamRef = useRef<{
     messageId: string
     fullContent: string
     currentIndex: number
   } | null>(null)
+  const isStoppedRef = useRef(false) // 添加停止标志
 
   const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9)
 
@@ -423,13 +426,27 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
   }
 
   const stopStreaming = useCallback(() => {
+    // 设置停止标志
+    isStoppedRef.current = true
+    
+    // 清除所有超时
     if (streamingTimeoutRef.current) {
       clearTimeout(streamingTimeoutRef.current)
       streamingTimeoutRef.current = null
     }
     
+    if (stepTimeoutRef.current) {
+      clearTimeout(stepTimeoutRef.current)
+      stepTimeoutRef.current = null
+    }
+    
+    if (toolTimeoutRef.current) {
+      clearTimeout(toolTimeoutRef.current)
+      toolTimeoutRef.current = null
+    }
+    
+    // 完成当前流式消息（如果有的话）
     if (currentStreamRef.current) {
-      // 完成当前流式消息
       setMessages(prev => 
         prev.map(msg => 
           msg.id === currentStreamRef.current?.messageId
@@ -440,11 +457,38 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
       currentStreamRef.current = null
     }
     
+    // 更新所有正在运行的工具调用状态为 'stop'
+    setMessages(prev => 
+      prev.map(msg => {
+        if (msg.type === 'tool_call' && msg.content.tool_call?.status === 'running') {
+          return { 
+            ...msg, 
+            content: {
+              ...msg.content,
+              tool_call: {
+                ...msg.content.tool_call,
+                status: 'stop' as const,
+                error: '用户停止了操作'
+              }
+            }
+          }
+        }
+        return msg
+      })
+    )
+    
+    // 停止加载状态
     setIsLoading(false)
+    
+    console.log('停止流式传输')
   }, [])
 
   const streamContent = useCallback(() => {
-    if (!currentStreamRef.current) return
+    // 检查是否已被停止
+    if (isStoppedRef.current || !currentStreamRef.current) {
+      console.log('streamContent: 检测到停止信号或无流式内容')
+      return
+    }
     
     const { messageId, fullContent, currentIndex } = currentStreamRef.current
     
@@ -484,6 +528,9 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
 
   const simulateAIResponse = useCallback((userMessage: string) => {
     console.log('simulateAIResponse called with:', userMessage)
+    
+    // 重置停止标志
+    isStoppedRef.current = false
     setIsLoading(true)
     
     // 检查关键词并选择对应的示例
@@ -505,6 +552,12 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
     let stepIndex = 0
     
     const processNextStep = () => {
+      // 检查是否已被停止
+      if (isStoppedRef.current) {
+        console.log('检测到停止信号，停止处理步骤')
+        return
+      }
+      
       if (stepIndex >= selectedResponse.steps.length) {
         setIsLoading(false)
         return
@@ -667,7 +720,13 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
         setMessages(prev => [...prev, toolMessage])
         
         // 模拟工具调用完成
-        setTimeout(() => {
+        toolTimeoutRef.current = setTimeout(() => {
+          // 再次检查是否已被停止
+          if (isStoppedRef.current) {
+            console.log('工具调用过程中检测到停止信号')
+            return
+          }
+          
           const toolResult = getToolResult(step.tool)
           setMessages(prev => 
             prev.map(msg => 
@@ -693,7 +752,7 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
           )
           
           stepIndex++
-          setTimeout(processNextStep, 300)
+          stepTimeoutRef.current = setTimeout(processNextStep, 300)
         }, 1500 + Math.random() * 1000) // 1.5-2.5秒的随机延迟
         
       } else if (step.type === 'text') {
@@ -719,7 +778,11 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
         
         // 开始流式回复，完成后继续下一步
         const streamForThisStep = () => {
-          if (!currentStreamRef.current) return
+          // 检查是否已被停止
+          if (isStoppedRef.current || !currentStreamRef.current) {
+            console.log('流式回复过程中检测到停止信号')
+            return
+          }
           
           const { messageId, fullContent, currentIndex } = currentStreamRef.current
           
@@ -736,7 +799,7 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
             
             // 继续下一步
             stepIndex++
-            setTimeout(processNextStep, 800) // 增加间隔时间
+            stepTimeoutRef.current = setTimeout(processNextStep, 800) // 增加间隔时间
             return
           }
           
@@ -760,7 +823,7 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
           streamingTimeoutRef.current = setTimeout(streamForThisStep, streamDelay)
         }
         
-        setTimeout(streamForThisStep, 500)
+        stepTimeoutRef.current = setTimeout(streamForThisStep, 500)
       }
     }
     
