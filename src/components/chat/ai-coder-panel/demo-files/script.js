@@ -186,7 +186,7 @@ class GomokuGame {
         }
         
         // 弹出游戏结束提示
-        alert(`🎉 游戏结束！\n${message}\n\n统计信息：\n黑子获胜：${this.stats.blackWins + (winner === 'black' ? 1 : 0)} 次\n白子获胜：${this.stats.whiteWins + (winner === 'white' ? 1 : 0)} 次\n平局：${this.stats.draws + (winner === 'draw' ? 1 : 0)} 次`);
+        alert(`🎉 游戏结束！\n${message}\n`);
         
         this.saveStats();
         this.updateStatsDisplay();
