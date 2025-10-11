@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
 import { ApiChatExample } from '@/components/chat/api-chat-example'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { useMockStreamingChat } from '@/hooks'
 import { MessageCircle, Sparkles, Code2, Zap, Wrench } from 'lucide-react'
 import type { Message } from '@/types/chat'
@@ -100,7 +101,10 @@ export const useCounter = (initialValue: number = 0) => {
 
   if (showApiChat) {
     return (
-      <div className="h-screen">
+      <div className="h-screen relative">
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
         <ApiChatExample 
           apiBaseUrl="http://localhost:8000"
           className="h-full"
@@ -111,7 +115,10 @@ export const useCounter = (initialValue: number = 0) => {
 
   if (showAIDeveloper) {
     return (
-      <div className="h-screen">
+      <div className="h-screen relative">
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
         <ApiChatExample 
           apiBaseUrl="http://localhost:8000"
           className="h-full"
@@ -123,12 +130,22 @@ export const useCounter = (initialValue: number = 0) => {
   }
 
   if (showToolPanel) {
-    return <ToolPanelDemo />
+    return (
+      <div className="relative">
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
+        <ToolPanelDemo />
+      </div>
+    )
   }
 
   if (showChat) {
     return (
-      <div className="h-screen">
+      <div className="h-screen relative">
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
         <ChatLayout
           messages={messages}
           isLoading={isLoading}
@@ -142,7 +159,10 @@ export const useCounter = (initialValue: number = 0) => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-8">
+    <div className="min-h-screen bg-background text-foreground p-8 relative">
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
