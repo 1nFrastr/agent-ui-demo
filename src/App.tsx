@@ -157,51 +157,75 @@ export const useCounter = (initialValue: number = 0) => {
 
         {/* 流式对话演示入口 */}
         <div className="mb-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">🚀 对话功能演示</h2>
-            <p className="text-muted-foreground">体验实时AI对话，支持Markdown渲染和代码高亮</p>
-          </div>
-          <div className="flex justify-center gap-4 flex-wrap">
-            <Button 
-              size="lg" 
-              onClick={() => setShowChat(true)}
-              className="px-8 py-4 text-lg"
-            >
-              <MessageCircle className="mr-3 h-6 w-6" />
-              基础对话演示
-            </Button>
-            <Button 
-              size="lg" 
-              variant="default"
-              onClick={() => setShowApiChat(true)}
-              className="px-8 py-4 text-lg bg-green-600 hover:bg-green-700"
-            >
-              <Zap className="mr-3 h-6 w-6" />
-              深度研究代理
-            </Button>
-            <Button 
-              size="lg" 
-              variant="default"
-              onClick={() => setShowAIDeveloper(true)}
-              className="px-8 py-4 text-lg bg-purple-600 hover:bg-purple-700"
-            >
-              <Wrench className="mr-3 h-6 w-6" />
-              AI开发者代理
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => setShowToolPanel(true)}
-              className="px-8 py-4 text-lg"
-            >
-              <Code2 className="mr-3 h-6 w-6" />
-              编程工具面板
-            </Button>
-          </div>
-          <div className="text-center mt-4">
-            <p className="text-sm text-muted-foreground">
-              💡 API流式对话需要后端服务器运行在 localhost:8000
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* 纯前端MOCK卡片 */}
+            <div className="border border-border rounded-lg bg-card p-6">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <MessageCircle className="h-6 w-6 text-primary" />
+                  <h3 className="text-xl font-semibold">纯前端演示</h3>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  无需后端，体验前端流式对话和工具面板功能
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  size="lg" 
+                  onClick={() => setShowChat(true)}
+                  className="w-full py-3"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  基础对话演示
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  onClick={() => setShowToolPanel(true)}
+                  className="w-full py-3"
+                >
+                  <Code2 className="mr-2 h-5 w-5" />
+                  编程工具面板
+                </Button>
+              </div>
+            </div>
+
+            {/* 真实后端交互卡片 */}
+            <div className="border border-border rounded-lg bg-card p-6">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                  <h3 className="text-xl font-semibold">AI智能代理</h3>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  连接后端API，体验真实的AI代理功能
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  size="lg" 
+                  onClick={() => setShowApiChat(true)}
+                  className="w-full py-3"
+                >
+                  <Zap className="mr-2 h-5 w-5" />
+                  深度研究代理
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  onClick={() => setShowAIDeveloper(true)}
+                  className="w-full py-3"
+                >
+                  <Wrench className="mr-2 h-5 w-5" />
+                  AI开发者代理
+                </Button>
+              </div>
+              <div className="mt-4 text-center">
+                <p className="text-xs text-muted-foreground">
+                  💡 需要先启动 FastAPI 后端服务
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
