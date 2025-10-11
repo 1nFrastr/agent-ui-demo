@@ -1,27 +1,39 @@
-# Agent 对话 UI 库
+# Agentic 全栈开发模板示例
 
-一个基于现代Web技术栈构建的智能对话界面UI库，包含前端UI组件库和后端API服务。
+一个基于现代Web技术栈构建的智能对话界面全栈应用，包含前端UI组件库和后端API服务。
 
-## ✨ 特性
+## 特性
 
 ### 前端特性
-- 🎨 **现代UI组件**: 基于 React 18 + TypeScript + TailwindCSS + Radix UI
-- 💬 **流式对话**: 支持实时流式消息传输和展示
-- 🔧 **工具集成**: 智能工具调用状态跟踪和可视化
-- 🎯 **类型安全**: 完整的 TypeScript 类型定义
-- 📱 **响应式设计**: 适配各种屏幕尺寸
-- 🌙 **主题支持**: 支持亮色/暗色主题切换
-- 🔤 **Markdown渲染**: 支持代码高亮和数学公式
+- **现代UI组件**: 基于 React 18 + TypeScript + TailwindCSS + Radix UI
+- **流式对话**: 支持实时流式消息传输和展示
+- **工具集成**: 智能工具调用状态跟踪和可视化
+- **类型安全**: 完整的 TypeScript 类型定义
+- **主题支持**: 支持亮色/暗色主题切换
 
 ### 后端特性
-- 🚀 **高性能API**: FastAPI + LangChain 架构
-- 🌊 **流式响应**: Server-Sent Events (SSE) 实时数据传输
-- 🧠 **智能Agent**: DeepResearch Agent 支持多轮对话和工具调用
-- 🔍 **智能搜索**: 集成 Tavily AI 网页搜索和内容提取
-- 📊 **数据统一**: 前后端 camelCase 字段命名规范
-- 🔄 **错误重试**: 自动重试机制和错误处理
+- **高性能API**: FastAPI + LangChain 架构
+- **流式响应**: Server-Sent Events (SSE) 实时数据传输
+- **智能Agent**: DeepResearch Agent 支持多轮对话和工具调用
+- **智能搜索**: 集成 Tavily AI 网页搜索和内容提取
+- **数据统一**: 前后端 camelCase 字段命名规范
+- **错误重试**: 自动重试机制和错误处理
 
-## 🚀 快速开始
+## 快速开始
+
+### 环境配置
+
+在启动后端服务之前，需要配置环境变量。复制 `backend/.env.example` 文件为 `backend/.env`，并配置以下必需参数：
+
+**必需配置：**
+- `OPENAI_API_KEY`: OpenAI API 密钥（必需）
+- `TAVILY_API_KEY`: Tavily AI 搜索 API 密钥（必需）
+
+**可选配置：**
+- `OPENAI_BASE_URL`: OpenAI API 基础URL（默认：https://api.openai.com/v1）
+- `OPENAI_MODEL`: 使用的模型（默认：gpt-4）
+- `LANGSMITH_API_KEY`: LangSmith 追踪和监控密钥（可选）
+- 其他配置项请参考 `backend/.env.example`
 
 ### 前端开发
 
@@ -38,7 +50,7 @@ pnpm build
 
 ### 后端开发
 
-#### Windows (推荐使用 Git Bash)
+#### Windows
 ```bash
 # 使用脚本启动
 ./start_backend.bat
@@ -60,7 +72,7 @@ uv sync --dev
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-## 📦 技术栈
+## 技术栈
 
 ### 前端
 - **React 18**: 现代React功能和Hooks
@@ -79,7 +91,7 @@ uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 - **Tavily AI**: 专业AI搜索API
 - **OpenAI API**: GPT模型集成
 
-## 🎯 核心功能
+## 核心功能
 
 ### 1. 基础对话组件
 - `ChatInterface`: 完整的聊天界面组件
@@ -88,31 +100,8 @@ uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 - `ChatLayout`: 聊天布局容器
 
 ### 2. 流式聊天Hook
-
-#### useMockStreamingChat (模拟)
-```typescript
-import { useMockStreamingChat } from '@/hooks'
-
-const { messages, isLoading, sendMessage } = useMockStreamingChat()
-```
-
-#### useApiStreamingChat (真实API)
-```typescript
-import { useApiStreamingChat } from '@/hooks'
-
-const {
-  messages,
-  isLoading,
-  isConnecting,
-  connectionError,
-  sendMessage,
-  stopStreaming,
-  retryLastMessage
-} = useApiStreamingChat({
-  baseUrl: 'http://localhost:8000',
-  maxRetries: 3
-})
-```
+- `useMockStreamingChat`: 模拟流式对话（用于开发测试）
+- `useApiStreamingChat`: 真实API流式对话，支持连接管理、错误处理和重试
 
 ### 3. 工具系统
 - **Web搜索工具**: 智能网页搜索
@@ -126,46 +115,7 @@ const {
 - **HTML预览**: 实时预览HTML效果
 - **多标签支持**: 文件、预览切换
 
-## 📖 使用示例
-
-### 基础聊天界面
-```typescript
-import { ChatInterface } from '@/components/chat'
-import { useApiStreamingChat } from '@/hooks'
-
-export const MyChatApp = () => {
-  const { messages, isLoading, sendMessage } = useApiStreamingChat({
-    baseUrl: 'http://localhost:8000'
-  })
-
-  return (
-    <ChatInterface
-      messages={messages}
-      isLoading={isLoading}
-      onSendMessage={sendMessage}
-      placeholder="请输入您的问题..."
-    />
-  )
-}
-```
-
-### 完整示例组件
-```typescript
-import { ApiChatExample } from '@/components/chat'
-
-export const App = () => {
-  return (
-    <div className="h-screen">
-      <ApiChatExample
-        apiBaseUrl="http://localhost:8000"
-        className="h-full"
-      />
-    </div>
-  )
-}
-```
-
-## 🔌 API 接口
+## API 接口
 
 ### 流式聊天接口
 ```http
@@ -180,75 +130,11 @@ Content-Type: application/json
 ```
 
 ### 流式事件格式
-```typescript
-// 工具调用开始
-{ "type": "tool_call_start", "data": {...} }
+- `tool_call_start`: 工具调用开始
+- `tool_call_end`: 工具调用结束
+- `text_chunk`: 文本流式响应
+- `message_complete`: 消息完成
 
-// 工具调用结束
-{ "type": "tool_call_end", "data": {...} }
+## 许可证
 
-// 文本流式响应
-{ "type": "text_chunk", "data": {...} }
-
-// 消息完成
-{ "type": "message_complete", "data": {...} }
-```
-
-## 📁 项目结构
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+MIT License
