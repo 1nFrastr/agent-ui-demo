@@ -1,6 +1,6 @@
 # Agentic 全栈开发模板示例
 
-一个基于现代Web技术栈构建的智能对话界面全栈应用，包含前端UI组件库和后端API服务。
+一个基于 React + FastAPI 构建的 Agentic 全栈应用示例
 
 ## 特性
 
