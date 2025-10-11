@@ -69,6 +69,15 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
     setSelectedToolMessageId(null)
   }
 
+  const handleClearChat = React.useCallback(() => {
+    // 如果工具面板是打开状态，先关闭它
+    if (isToolPanelOpen) {
+      handleCloseToolPanel()
+    }
+    // 调用父组件的清空对话回调
+    onClearChat?.()
+  }, [isToolPanelOpen, onClearChat])
+
   return (
     <div
       className={cn(
@@ -92,7 +101,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
           defaultQuestions={defaultQuestions}
           onSendMessage={onSendMessage}
           onStop={onStop}
-          onClearChat={onClearChat}
+          onClearChat={handleClearChat}
           onToolDetailsClick={handleToolDetailsClick}
           className="h-full"
         />
