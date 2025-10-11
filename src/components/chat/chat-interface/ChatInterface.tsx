@@ -13,8 +13,6 @@ export interface ChatInterfaceProps {
   isLoading?: boolean
   /** 是否启用Markdown渲染 */
   enableMarkdown?: boolean
-  /** 主题模式 */
-  theme?: 'light' | 'dark'
   /** 输入框占位符 */
   placeholder?: string
   /** 发送消息回调 */
@@ -35,7 +33,6 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
       messages = [],
       isLoading = false,
       enableMarkdown = true,
-      theme = 'light',
       placeholder = '输入消息...',
       onSendMessage,
       onStop,
@@ -155,13 +152,12 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
             <ChatMessage
               message={message}
               enableMarkdown={enableMarkdown}
-              theme={theme}
               onToolDetailsClick={handleToolDetailsClick}
             />
           </div>
         )
       })
-    }, [messages, enableMarkdown, theme, handleToolDetailsClick])
+    }, [messages, enableMarkdown, handleToolDetailsClick])
 
     return (
       <div

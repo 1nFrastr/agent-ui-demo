@@ -12,8 +12,6 @@ export interface ChatLayoutProps {
   isLoading?: boolean
   /** 是否启用Markdown渲染 */
   enableMarkdown?: boolean
-  /** 主题模式 */
-  theme?: 'light' | 'dark'
   /** 输入框占位符 */
   placeholder?: string
   /** 发送消息回调 */
@@ -34,7 +32,6 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   messages = [],
   isLoading = false,
   enableMarkdown = true,
-  theme = 'light',
   placeholder = '输入消息...',
   autoOpenToolPanel = true,
   autoOpenTools = ['file_browser'],
@@ -88,7 +85,6 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
           messages={messages}
           isLoading={isLoading}
           enableMarkdown={enableMarkdown}
-          theme={theme}
           placeholder={placeholder}
           onSendMessage={onSendMessage}
           onStop={onStop}

@@ -117,15 +117,7 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
   
   // 获取Monaco主题名称
   const getThemeName = (theme: string): string => {
-    switch (theme) {
-      case 'dark':
-        return 'custom-dark'
-      case 'high-contrast':
-        return 'hc-black'
-      case 'light':
-      default:
-        return 'custom-light'
-    }
+    return theme === 'dark' ? 'vs-dark' : theme === 'high-contrast' ? 'hc-black' : 'vs'
   }
 
   // 初始化Monaco配置

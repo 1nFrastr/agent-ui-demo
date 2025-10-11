@@ -2,21 +2,25 @@ import * as React from 'react'
 import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
+import { useTheme } from '@/hooks/useTheme'
 import { Wrench, CheckCircle, XCircle, Loader2, ExternalLink, CirclePause } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 export interface ChatMessageProps {
   message: Message
   enableMarkdown?: boolean
-  theme?: 'light' | 'dark'
   onToolDetailsClick?: (messageId: string) => void
   className?: string
 }
 
 export const ChatMessage = React.memo(React.forwardRef<HTMLDivElement, ChatMessageProps>(
-  ({ message, enableMarkdown = true, theme = 'light', onToolDetailsClick, className }, ref) => {
+  ({ message, enableMarkdown = true, onToolDetailsClick, className }, ref) => {
     const isUser = message.sender === 'user'
     const isSystem = message.sender === 'system'
+    const { resolvedTheme } = useTheme()
+    
+    // 业务组件负责获取主题
+    const theme = resolvedTheme
 
     if (isSystem) {
       return (

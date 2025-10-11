@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { cn } from '@/utils'
 import type { FileBrowserProps, SimpleFile } from '../types'
 import { MonacoCodeEditor } from '@/components/ui/monaco-code-editor'
+import { useTheme } from '@/hooks/useTheme'
 import { 
   File, 
   Folder, 
@@ -74,9 +75,10 @@ const FileItem: React.FC<{
 const FileEditor: React.FC<{
   file: SimpleFile
   readOnly: boolean
+  theme: 'light' | 'dark'
   onSave: (content: string) => void
   onCancel: () => void
-}> = ({ file, readOnly, onSave, onCancel }) => {
+}> = ({ file, readOnly, theme, onSave, onCancel }) => {
   const [content, setContent] = useState(file.content || '')
   const [hasChanges, setHasChanges] = useState(false)
 
@@ -136,7 +138,7 @@ const FileEditor: React.FC<{
           width="100%"
           showMinimap={false}
           className="h-full"
-          theme="light"
+          theme={theme}
           fontSize={14}
           wordWrap="on"
         />
@@ -153,6 +155,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
   onFileEdit,
 }) => {
   const [editingFile, setEditingFile] = useState<SimpleFile | null>(null)
+  const { resolvedTheme } = useTheme()
 
   // 扁平化文件列表（简化版本，不支持文件夹展开）
   const flattenFiles = (fileList: SimpleFile[], level = 0): Array<SimpleFile & { level: number }> => {
@@ -230,6 +233,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
           <FileEditor
             file={editingFile}
             readOnly={readOnly}
+            theme={resolvedTheme}
             onSave={handleSaveEdit}
             onCancel={handleCancelEdit}
           />
@@ -266,7 +270,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
                 width="100%"
                 showMinimap={false}
                 className="h-full"
-                theme="light"
+                theme={resolvedTheme}
                 fontSize={14}
                 wordWrap="on"
               />

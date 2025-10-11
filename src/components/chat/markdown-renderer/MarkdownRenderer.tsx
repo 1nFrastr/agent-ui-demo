@@ -169,7 +169,7 @@ const lightComponents = createMarkdownComponents(oneLight)
 const darkComponents = createMarkdownComponents(oneDark)
 
 const MarkdownRenderer = React.memo(React.forwardRef<HTMLDivElement, MarkdownRendererProps>(
-  ({ content, theme = 'light', className }, ref) => {
+  ({ content, theme = 'dark', className }, ref) => {
     // 使用缓存的组件配置，避免每次渲染时重新创建
     const components = theme === 'dark' ? darkComponents : lightComponents
 

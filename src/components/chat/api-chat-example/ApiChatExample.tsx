@@ -101,7 +101,6 @@ export const ApiChatExample: React.FC<ApiChatExampleProps> = ({
         onClearChat={handleClearChat}
         enableMarkdown={true}
         placeholder={placeholder}
-        theme="light"
       />
     </div>
   )
