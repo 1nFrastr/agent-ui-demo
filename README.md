@@ -2,6 +2,9 @@
 
 一个基于 React + FastAPI 构建的 Agentic 全栈应用示例
 
+https://github.com/user-attachments/assets/05447737-7afb-4774-bed9-d740eaae7894
+
+
 ## 特性
 
 ### 前端特性
