@@ -3,7 +3,7 @@ import { ChatMessage } from '@/components/chat/chat-message'
 import { MessageInput } from '@/components/chat/message-input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { MessageCircle, MoreVertical, Trash2, ArrowDown, ArrowUp, ArrowRight } from 'lucide-react'
+import { MessageCircle, MoreVertical, Trash2, ArrowDown, ArrowRight } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 export interface ChatInterfaceProps {
