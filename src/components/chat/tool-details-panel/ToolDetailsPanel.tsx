@@ -93,6 +93,13 @@ const getStatusConfig = (status: ToolCallDetails['status']) => {
         label: '失败'
       }
   }
+  
+  return {
+    icon: Play,
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-50 dark:bg-gray-950/20',
+    label: '未知'
+  }
 }
 
 // 文件操作详情组件
