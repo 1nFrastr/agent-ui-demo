@@ -123,10 +123,7 @@ export const useCounter = (initialValue: number = 0) => {
   // 根据路由渲染不同页面
   if (currentRoute === 'api-chat') {
     return (
-      <div className="h-screen relative">
-        <div className="absolute top-4 right-4 z-50">
-          <ThemeToggle />
-        </div>
+      <div className="h-screen">
         <ApiChatExample 
           apiBaseUrl="http://localhost:8000"
           className="h-full"
@@ -137,10 +134,7 @@ export const useCounter = (initialValue: number = 0) => {
 
   if (currentRoute === 'ai-developer') {
     return (
-      <div className="h-screen relative">
-        <div className="absolute top-4 right-4 z-50">
-          <ThemeToggle />
-        </div>
+      <div className="h-screen">
         <ApiChatExample 
           apiBaseUrl="http://localhost:8000"
           className="h-full"
@@ -152,22 +146,12 @@ export const useCounter = (initialValue: number = 0) => {
   }
 
   if (currentRoute === 'tool-panel') {
-    return (
-      <div className="relative">
-        <div className="absolute top-4 right-4 z-50">
-          <ThemeToggle />
-        </div>
-        <ToolPanelDemo />
-      </div>
-    )
+    return <ToolPanelDemo />
   }
 
   if (currentRoute === 'chat') {
     return (
-      <div className="h-screen relative">
-        <div className="absolute top-4 right-4 z-50">
-          <ThemeToggle />
-        </div>
+      <div className="h-screen">
         <ChatLayout
           messages={messages}
           isLoading={isLoading}
