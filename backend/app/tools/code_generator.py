@@ -1,14 +1,13 @@
 """Code generator tool for AI Developer Agent."""
 
-import asyncio
+import re
 import logging
-from typing import Any, Dict, List, Optional, AsyncGenerator
+from typing import Any, Dict, List, AsyncGenerator
 from datetime import datetime
 
 from app.tools.base import BaseTool
 from app.models.tool import ToolParameter
 from app.services.llm_service import get_llm_service
-from app.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -16,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 class CodeGeneratorTool(BaseTool):
     """Tool for generating code files (HTML, CSS, JavaScript)."""
-    
+
     def __init__(self):
         super().__init__()
         self.llm_service = get_llm_service()
-        
+
         # 提示词模板
         self.html_prompt_template = """作为一个专业的前端开发工程师，请根据以下项目需求生成HTML文件：
 
@@ -35,7 +34,8 @@ class CodeGeneratorTool(BaseTool):
 6. 包含必要的表单或交互元素
 7. 使用合适的标题层级
 
-请只返回完整的HTML代码，不要包含任何解释文字或markdown格式：
+重要：请直接返回纯HTML代码，不要使用 ```html 等 markdown 标记包裹。
+直接从 <!DOCTYPE html> 开始输出，到 </html> 结束。
 """
 
         self.css_prompt_template = """作为一个专业的CSS开发工程师，请为以下HTML结构生成对应的CSS样式：
@@ -55,7 +55,8 @@ HTML结构：
 7. 使用合理的颜色方案和字体搭配
 8. 添加适当的阴影和圆角效果
 
-请只返回完整的CSS代码，不要包含任何解释文字或markdown格式：
+重要：请直接返回纯CSS代码，不要使用 ```css 等 markdown 标记包裹。
+直接从第一行CSS选择器开始输出，不要包含任何解释文字。
 """
 
         self.js_prompt_template = """作为一个专业的JavaScript开发工程师，请为以下项目生成交互逻辑：
@@ -85,17 +86,28 @@ CSS样式：
 8. 响应式交互支持
 9. 直接编写执行代码，无需事件监听器包装
 
-请只返回完整的JavaScript代码，不要包含任何解释文字或markdown格式：
+重要：请直接返回纯JavaScript代码，不要使用 ```javascript、```js 等 markdown 标记包裹。
+直接从第一行代码开始输出，不要包含任何解释文字。
 """
     
+    @staticmethod
+    def clean_markdown_code_blocks(content: str) -> str:
+        """Remove markdown code block markers from generated code."""
+        content = content.strip()
+        # 移除开头的 markdown 代码块标记（如 ```html, ```css, ```javascript, ```js 等）
+        content = re.sub(r'^```[\w]*\n?', '', content)
+        # 移除结尾的 markdown 代码块标记
+        content = re.sub(r'\n?```$', '', content)
+        return content.strip()
+
     @property
     def name(self) -> str:
         return "code_generator"
-    
+
     @property
     def description(self) -> str:
         return "根据项目需求生成HTML、CSS、JavaScript代码文件"
-    
+
     @property
     def parameters(self) -> List[ToolParameter]:
         return [
@@ -128,28 +140,31 @@ CSS样式：
     @property
     def category(self) -> str:
         return "development"
-    
+
     async def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Execute code generation."""
         file_type = parameters["file_type"].lower()
         project_description = parameters["project_description"]
         html_content = parameters.get("html_content", "")
         css_content = parameters.get("css_content", "")
-        
-        self.logger.info(f"Generating {file_type} code for project: {project_description[:100]}...")
-        
+
+        self.logger.info(
+            "Generating %s code for project: %s...",
+            file_type,
+            project_description[:100]
+        )
+
         try:
             if file_type == "html":
                 return await self._generate_html(project_description)
-            elif file_type == "css":
+            if file_type == "css":
                 return await self._generate_css(project_description, html_content)
-            elif file_type == "js":
+            if file_type == "js":
                 return await self._generate_js(project_description, html_content, css_content)
-            else:
-                raise ValueError(f"Unsupported file type: {file_type}")
-                
+            raise ValueError(f"Unsupported file type: {file_type}")
+
         except Exception as e:
-            self.logger.error(f"Code generation failed: {e}")
+            self.logger.error("Code generation failed: %s", e)
             return {
                 "status": "error",
                 "error": str(e),
@@ -159,12 +174,12 @@ CSS样式：
     async def _generate_html(self, project_description: str) -> Dict[str, Any]:
         """Generate HTML file."""
         self.logger.info("Generating HTML file...")
-        
+
         # 构建提示词
         prompt = self.html_prompt_template.format(
             project_description=project_description
         )
-        
+
         try:
             # 调用LLM生成HTML
             html_content = await self.llm_service.generate_completion(
@@ -172,7 +187,10 @@ CSS样式：
                 max_tokens=2000,
                 temperature=0.7
             )
-            
+
+            # 清理 markdown 标记
+            html_content = self.clean_markdown_code_blocks(html_content)
+
             return {
                 "status": "success",
                 "file_type": "html",
@@ -181,24 +199,24 @@ CSS样式：
                 "size": len(html_content),
                 "generated_at": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
-            self.logger.error(f"HTML generation failed: {e}")
+            self.logger.error("HTML generation failed: %s", e)
             raise
     
     async def _generate_css(self, project_description: str, html_content: str) -> Dict[str, Any]:
         """Generate CSS file."""
         self.logger.info("Generating CSS file...")
-        
+
         if not html_content:
             raise ValueError("HTML content is required for CSS generation")
-        
+
         # 构建提示词
         prompt = self.css_prompt_template.format(
             project_description=project_description,
             html_content=html_content
         )
-        
+
         try:
             # 调用LLM生成CSS
             css_content = await self.llm_service.generate_completion(
@@ -206,7 +224,10 @@ CSS样式：
                 max_tokens=2500,
                 temperature=0.7
             )
-            
+
+            # 清理 markdown 标记
+            css_content = self.clean_markdown_code_blocks(css_content)
+
             return {
                 "status": "success",
                 "file_type": "css",
@@ -215,25 +236,25 @@ CSS样式：
                 "size": len(css_content),
                 "generated_at": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
-            self.logger.error(f"CSS generation failed: {e}")
+            self.logger.error("CSS generation failed: %s", e)
             raise
     
     async def _generate_js(self, project_description: str, html_content: str, css_content: str) -> Dict[str, Any]:
         """Generate JavaScript file."""
         self.logger.info("Generating JavaScript file...")
-        
+
         if not html_content:
             raise ValueError("HTML content is required for JavaScript generation")
-        
+
         # 构建提示词
         prompt = self.js_prompt_template.format(
             project_description=project_description,
             html_content=html_content,
             css_content=css_content or "/* CSS样式将在style.css中定义 */"
         )
-        
+
         try:
             # 调用LLM生成JavaScript
             js_content = await self.llm_service.generate_completion(
@@ -241,35 +262,38 @@ CSS样式：
                 max_tokens=2500,
                 temperature=0.7
             )
-            
+
+            # 清理 markdown 标记
+            js_content = self.clean_markdown_code_blocks(js_content)
+
             return {
                 "status": "success",
-                "file_type": "js", 
+                "file_type": "js",
                 "file_name": "script.js",
                 "content": js_content,
                 "size": len(js_content),
                 "generated_at": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
-            self.logger.error(f"JavaScript generation failed: {e}")
+            self.logger.error("JavaScript generation failed: %s", e)
             raise
-    
-    async def generate_file_stream(self, file_type: str, project_description: str, 
-                                 context: Dict[str, Any] = None) -> AsyncGenerator[str, None]:
+
+    async def generate_file_stream(self, file_type: str, project_description: str,
+                                    context: Dict[str, Any] = None) -> AsyncGenerator[str, None]:
         """Generate file with streaming response."""
         context = context or {}
-        
+
         # 准备参数
         parameters = {
             "file_type": file_type,
             "project_description": project_description,
             **context
         }
-        
+
         # 调用执行方法
         result = await self.execute(parameters)
-        
+
         if result["status"] == "success":
             yield result["content"]
         else:
