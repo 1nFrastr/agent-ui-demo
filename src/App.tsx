@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatLayout } from '@/components/chat/chat-layout'
@@ -11,6 +11,9 @@ import type { Message } from '@/types/chat'
 // 真正的AICoderPanel组件
 import { AICoderPanel } from './components/chat/ai-coder-panel/AICoderPanel'
 import { sampleFileSystem } from './components/chat/ai-coder-panel/sampleData'
+
+// 简易路由类型
+type Route = 'home' | 'chat' | 'api-chat' | 'tool-panel' | 'ai-developer'
 
 // AICoderPanel演示组件
 const ToolPanelDemo = () => {
@@ -38,10 +41,28 @@ const ToolPanelDemo = () => {
 }
 
 function App() {
-  const [showChat, setShowChat] = useState(false)
-  const [showApiChat, setShowApiChat] = useState(false)
-  const [showToolPanel, setShowToolPanel] = useState(false)
-  const [showAIDeveloper, setShowAIDeveloper] = useState(false)
+  // 从 URL hash 获取当前路由
+  const getRouteFromHash = (): Route => {
+    const hash = window.location.hash.slice(1) // 去掉 #
+    const validRoutes: Route[] = ['home', 'chat', 'api-chat', 'tool-panel', 'ai-developer']
+    return validRoutes.includes(hash as Route) ? (hash as Route) : 'home'
+  }
+
+  const [currentRoute, setCurrentRoute] = useState<Route>(getRouteFromHash())
+
+  // 监听 hash 变化
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentRoute(getRouteFromHash())
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  // 路由导航函数
+  const navigate = (route: Route) => {
+    window.location.hash = route
+  }
   
   // 使用流式聊天Hook
   const {
@@ -99,7 +120,8 @@ export const useCounter = (initialValue: number = 0) => {
     }
   ]
 
-  if (showApiChat) {
+  // 根据路由渲染不同页面
+  if (currentRoute === 'api-chat') {
     return (
       <div className="h-screen relative">
         <div className="absolute top-4 right-4 z-50">
@@ -113,7 +135,7 @@ export const useCounter = (initialValue: number = 0) => {
     )
   }
 
-  if (showAIDeveloper) {
+  if (currentRoute === 'ai-developer') {
     return (
       <div className="h-screen relative">
         <div className="absolute top-4 right-4 z-50">
@@ -129,7 +151,7 @@ export const useCounter = (initialValue: number = 0) => {
     )
   }
 
-  if (showToolPanel) {
+  if (currentRoute === 'tool-panel') {
     return (
       <div className="relative">
         <div className="absolute top-4 right-4 z-50">
@@ -140,7 +162,7 @@ export const useCounter = (initialValue: number = 0) => {
     )
   }
 
-  if (showChat) {
+  if (currentRoute === 'chat') {
     return (
       <div className="h-screen relative">
         <div className="absolute top-4 right-4 z-50">
@@ -192,7 +214,7 @@ export const useCounter = (initialValue: number = 0) => {
               <div className="flex flex-col gap-3">
                 <Button 
                   size="lg" 
-                  onClick={() => setShowChat(true)}
+                  onClick={() => navigate('chat')}
                   className="w-full py-3"
                 >
                   <MessageCircle className="mr-2 h-5 w-5" />
@@ -201,7 +223,7 @@ export const useCounter = (initialValue: number = 0) => {
                 <Button 
                   size="lg" 
                   variant="secondary"
-                  onClick={() => setShowToolPanel(true)}
+                  onClick={() => navigate('tool-panel')}
                   className="w-full py-3"
                 >
                   <Code2 className="mr-2 h-5 w-5" />
@@ -224,7 +246,7 @@ export const useCounter = (initialValue: number = 0) => {
               <div className="flex flex-col gap-3">
                 <Button 
                   size="lg" 
-                  onClick={() => setShowApiChat(true)}
+                  onClick={() => navigate('api-chat')}
                   className="w-full py-3"
                 >
                   <Zap className="mr-2 h-5 w-5" />
@@ -233,7 +255,7 @@ export const useCounter = (initialValue: number = 0) => {
                 <Button 
                   size="lg" 
                   variant="secondary"
-                  onClick={() => setShowAIDeveloper(true)}
+                  onClick={() => navigate('ai-developer')}
                   className="w-full py-3"
                 >
                   <Wrench className="mr-2 h-5 w-5" />
