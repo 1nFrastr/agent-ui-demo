@@ -208,7 +208,7 @@ export const useCounter = (initialValue: number = 0) => {
                   className="w-full py-3"
                 >
                   <Zap className="mr-2 h-5 w-5" />
-                  深度研究代理
+                  深度研究Agent
                 </Button>
                 <Button 
                   size="lg" 
@@ -217,7 +217,7 @@ export const useCounter = (initialValue: number = 0) => {
                   className="w-full py-3"
                 >
                   <Wrench className="mr-2 h-5 w-5" />
-                  AI开发者代理
+                  AI开发者Agent
                 </Button>
               </div>
               <div className="mt-4 text-center">
