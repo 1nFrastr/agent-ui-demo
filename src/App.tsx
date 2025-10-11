@@ -5,7 +5,7 @@ import { ChatLayout } from '@/components/chat/chat-layout'
 import { ApiChatExample } from '@/components/chat/api-chat-example'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { useMockStreamingChat } from '@/hooks'
-import { MessageCircle, Sparkles, Code2, Zap, Wrench } from 'lucide-react'
+import { MessageCircle, Sparkles, Code2, Zap, Wrench, Github } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 // 真正的AICoderPanel组件
@@ -170,7 +170,16 @@ export const useCounter = (initialValue: number = 0) => {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8 relative">
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+        <a 
+          href="https://github.com/1nFrastr/agentic-fullstack-demo" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-2 hover:bg-accent rounded-md transition-colors"
+          aria-label="GitHub Repository"
+        >
+          <Github className="h-5 w-5" />
+        </a>
         <ThemeToggle />
       </div>
       <div className="max-w-4xl mx-auto">
