@@ -159,6 +159,10 @@ export const useCounter = (initialValue: number = 0) => {
           onStop={stopStreaming}
           onClearChat={clearChat}
           placeholder="发送消息开始对话..."
+          defaultQuestions={[
+            '写一个五子棋游戏',
+            '介绍大冰《他们最幸福》这本书',
+          ]}
         />
       </div>
     )

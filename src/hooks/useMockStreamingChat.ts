@@ -535,10 +535,10 @@ export const useMockStreamingChat = (options: UseMockStreamingChatOptions = {}):
     
     // 检查关键词并选择对应的示例
     let selectedResponse
-    if (userMessage.toLowerCase().includes('test')) {
+    if (userMessage.toLowerCase().includes('大冰')) {
       // 使用包含web_search和web_content的示例（索引为3）
       selectedResponse = AI_RESPONSES[3]
-    } else if (userMessage.toLowerCase().includes('code')) {
+    } else if (userMessage.toLowerCase().includes('游戏')) {
       // 使用包含代码生成和文件浏览器的示例（索引为5）
       selectedResponse = AI_RESPONSES[5]
     } else {

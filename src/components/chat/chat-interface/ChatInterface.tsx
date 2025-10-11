@@ -3,7 +3,7 @@ import { ChatMessage } from '@/components/chat/chat-message'
 import { MessageInput } from '@/components/chat/message-input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { MessageCircle, MoreVertical, Trash2, ArrowDown } from 'lucide-react'
+import { MessageCircle, MoreVertical, Trash2, ArrowDown, ArrowUp, ArrowRight } from 'lucide-react'
 import type { Message } from '@/types/chat'
 
 export interface ChatInterfaceProps {
@@ -15,6 +15,8 @@ export interface ChatInterfaceProps {
   enableMarkdown?: boolean
   /** 输入框占位符 */
   placeholder?: string
+  /** 默认提问列表（仅在对话开始前显示） */
+  defaultQuestions?: string[]
   /** 发送消息回调 */
   onSendMessage?: (message: string) => void
   /** 停止当前操作回调 */
@@ -34,6 +36,7 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
       isLoading = false,
       enableMarkdown = true,
       placeholder = '输入消息...',
+      defaultQuestions,
       onSendMessage,
       onStop,
       onClearChat,
@@ -200,14 +203,28 @@ export const ChatInterface = React.forwardRef<HTMLDivElement, ChatInterfaceProps
           className="flex-1 overflow-y-auto px-4 py-6"
         >
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <MessageCircle className="h-16 w-16 text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium text-muted-foreground mb-2">
                 开始新对话
               </h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                发送消息开始与AI助手对话，支持Markdown格式和代码高亮。
-              </p>
+              
+              {/* 默认提问按钮 */}
+              {defaultQuestions && defaultQuestions.length > 0 && (
+                <div className="flex flex-col gap-2.5 w-full max-w-md mt-4">
+                  {defaultQuestions.map((question, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="w-full text-left justify-start h-auto py-2.5 px-3.5 hover:bg-accent transition-colors"
+                      onClick={() => handleSendMessage(question)}
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="text-xs">{question}</span>
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <>

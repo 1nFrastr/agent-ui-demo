@@ -14,6 +14,8 @@ export interface ChatLayoutProps {
   enableMarkdown?: boolean
   /** 输入框占位符 */
   placeholder?: string
+  /** 默认提问列表（仅在对话开始前显示） */
+  defaultQuestions?: string[]
   /** 发送消息回调 */
   onSendMessage?: (message: string) => void
   /** 停止当前操作回调 */
@@ -33,6 +35,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   isLoading = false,
   enableMarkdown = true,
   placeholder = '输入消息...',
+  defaultQuestions,
   autoOpenToolPanel = true,
   autoOpenTools = ['file_browser'],
   onSendMessage,
@@ -86,6 +89,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
           isLoading={isLoading}
           enableMarkdown={enableMarkdown}
           placeholder={placeholder}
+          defaultQuestions={defaultQuestions}
           onSendMessage={onSendMessage}
           onStop={onStop}
           onClearChat={onClearChat}
